@@ -39,6 +39,7 @@ export default function Button({
       )}
       disabled={isDisabled}
       onClick={onClick}
+      type="button"
     >
       {loading ? (
         <FontAwesomeIcon icon={faCircleNotch} className="animate-spin" />
