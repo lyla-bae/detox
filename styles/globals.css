@@ -92,49 +92,49 @@
   ****************************/
 @layer utilities {
   .header-lg {
-    font-size: 28px;
+    font-size: 1.75rem;
     font-weight: 700;
     line-height: 110%;
   }
 
   .header-md {
-    font-size: 24px;
+    font-size: 1.5rem;
     font-weight: 700;
     line-height: 110%;
   }
 
   .title-lg {
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
     line-height: 110%;
   }
 
   .title-md {
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 700;
     line-height: 110%;
   }
 
   .body-lg {
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 500;
     line-height: 150%;
   }
 
   .body-md {
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 500;
     line-height: 150%;
   }
 
   .label-lg {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 500;
     line-height: 110%;
   }
 
   .label-md {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 500;
     line-height: 110%;
   }
