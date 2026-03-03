@@ -31,7 +31,7 @@ const KebabMenu = ({
       <DropdownMenuPrimitive.Trigger asChild>
         <button 
           type="button"
-          className={`cursor-pointer flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full transition-colors outline-none ${className}`}
+          className={`cursor-pointer flex items-center justify-center w-10 h-10 hover:bg-gray-50 rounded-full transition-colors outline-none ${className}`}
         >
           <FontAwesomeIcon icon={faEllipsisVertical} className="w-5 h-5 text-gray-400" />
         </button>
@@ -41,7 +41,7 @@ const KebabMenu = ({
         <DropdownMenuPrimitive.Content
           align="end"
           sideOffset={5}
-          className="z-50 min-w-[140px] overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg animate-in fade-in-80 zoom-in-95"
+          className="z-50 min-w-[140px] overflow-hidden rounded-xl border border-gray-100 bg-white p-1.5 shadow-lg animate-in fade-in-80 zoom-in-95"
         >
           {variant === 'edit' && onEdit && (
             <DropdownMenuPrimitive.Item

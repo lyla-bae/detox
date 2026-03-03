@@ -21,7 +21,7 @@ export default function TextArea({
     <div className="relative w-full">
       <ShadcnTextarea
         className={cn(
-          "min-h-[200px] w-full resize-none rounded-2xl bg-gray-100 p-4 pb-10 border-none text-[16px] placeholder:text-gray-300 focus-visible:ring-0",
+          "min-h-[200px] w-full resize-none rounded-2xl bg-gray-50 p-4 pb-10 border-none text-[16px] placeholder:text-gray-300 focus-visible:ring-0",
           className
         )}
         maxLength={maxLength}
