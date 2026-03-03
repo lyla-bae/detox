@@ -8,8 +8,8 @@ import { faAngleRight } from "@fortawesome/free-solid-svg-icons/faAngleRight";
 
 interface Props {
   href: string;
-  imageSrc: string;
-  imageAlt: string;
+  imageSrc?: string;
+  imageAlt?: string;
   name: string;
 
   trialLabel?: string; // 유료무료 유무
