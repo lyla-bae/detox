@@ -19,7 +19,7 @@ type SubcriptionProps = {
   badgeVariant: "primary" | "danger";
 };
 
-export default function Subcription({
+export default function SubcriptionList({
   href,
   imageSrc = "/images/default.svg",
   imageAlt = "이미지 설명",
