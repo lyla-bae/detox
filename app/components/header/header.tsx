@@ -35,7 +35,7 @@ export default function Header({
                 onClick={() => (onBack ? onBack() : router.back())} 
                 className="cursor-pointer flex items-center justify-center w-10 h-10 -ml-2 rounded-full"
               >
-                <FontAwesomeIcon icon={faChevronLeft} className="w-7 h-7 text-black" />
+                <FontAwesomeIcon icon={faChevronLeft} className="w-7 h-7 text-gray-400" />
               </button>
             )}
             {variant === "default" && (
@@ -44,14 +44,14 @@ export default function Header({
               </div>
             )}
             {variant === "text" && (
-              <span className="header-md text-black">
+              <span className="header-md text-gray-400">
                 {leftText}
               </span>
             )}
           </div>
 
           <div className="flex flex-1 justify-center items-center">
-            <h1 className="title-lg text-black truncate ">
+            <h1 className="title-lg text-gray-400 truncate ">
               {title}
             </h1>
           </div>
