@@ -12,6 +12,18 @@
   --state-secondary: #0081a7;
   --state-danger: #d94d4c;
 
+  --blue-400: #33999f;
+  --blue-300: #54a9af;
+  --blue-200: #8ac4c8;
+  --blue-100: #b0d7da;
+  --blue-50: #e6f2f3;
+
+  --red-400: #e17170;
+  --red-300: #e68887;
+  --red-200: #eeadad;
+  --red-100: #f3c8c8;
+  --red-50: #fbeded;
+
   --gray-400: #222222;
   --gray-300: #616161;
   --gray-200: #eeeeee;
@@ -36,6 +48,18 @@
   --color-state-primary: var(--state-primary);
   --color-state-secondary: var(--state-secondary);
   --color-state-danger: var(--state-danger);
+
+  --color-blue-400: var(--blue-400);
+  --color-blue-300: var(--blue-300);
+  --color-blue-200: var(--blue-200);
+  --color-blue-100: var(--blue-100);
+  --color-blue-50: var(--blue-50);
+
+  --color-red-400: var(--red-400);
+  --color-red-300: var(--red-300);
+  --color-red-200: var(--red-200);
+  --color-red-100: var(--red-100);
+  --color-red-50: var(--red-50);
 
   --color-gray-400: var(--gray-400);
   --color-gray-300: var(--gray-300);
@@ -87,6 +111,22 @@
   }
 }
 
+/****************************
+  * Badge Components
+  ****************************/
+@layer components {
+  .badge {
+    @apply rounded-lg text-xs leading-none font-bold h-[25px] py-1 px-2 inline-flex items-center justify-center;
+  }
+
+  .badge-primary {
+    @apply bg-blue-50 text-blue-400;
+  }
+
+  .badge-danger {
+    @apply bg-red-50 text-red-400;
+  }
+}
 /****************************
   * Typography
   ****************************/
