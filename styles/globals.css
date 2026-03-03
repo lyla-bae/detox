@@ -182,6 +182,47 @@
 }
 
 /****************************
+  * CommunityCard Components
+  ****************************/
+@layer components {
+  .community-item-list {
+    @apply w-full flex flex-col gap-5 bg-gray-50 py-4 rounded-lg;
+  }
+  .community-item {
+    @apply w-full grid grid-cols-1 items-center gap-4 py-4 px-6 bg-white rounded-lg;
+  }
+  .profile-info {
+    @apply flex items-start gap-3;
+  }
+  .profile-info .text-wrap {
+    @apply flex gap-2;
+  }
+  .profile-info .item-name {
+    @apply text-sm text-black font-bold leading-[110%];
+  }
+  .profile-info .item-time {
+    @apply text-xs text-gray-300;
+  }
+  .community-item .item-content {
+    @apply text-sm text-gray-300;
+  }
+  .community-item .item-content h6 {
+    @apply text-lg text-black font-bold leading-[140%] mb-2 line-clamp-2;
+  }
+  .community-item .item-content p {
+    @apply text-base leading-[140%] text-gray-300 line-clamp-3;
+  }
+  .reaction-bar {
+    @apply flex gap-4 mt-2;
+  }
+  .reaction-bar div {
+    @apply text-sm flex items-center gap-1 text-gray-200;
+  }
+  .reaction-bar span {
+    @apply text-gray-400;
+  }
+}
+/****************************
   * Typography
   ****************************/
 @layer utilities {
