@@ -24,7 +24,7 @@ interface SubscriptionStoreState {
 }
 
 export const useSubscriptionStore = create<SubscriptionStoreState>((set) => ({
-  hasSubscription: true,
+  hasSubscription: false,
   list: [],
   setHasSubscription: (value) => set({ hasSubscription: value }),
   setList: (items) => set({ list: items }),
