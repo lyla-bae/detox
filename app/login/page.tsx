@@ -1,6 +1,11 @@
 import Image from "next/image";
 import Button from "../components/button";
 import SnsLoginButton from "./_components/sns-login-button";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
 export default function Page() {
   return (
@@ -20,11 +25,18 @@ export default function Page() {
         <SnsLoginButton type="google" />
       </div>
 
-      <div className="w-full px-6 flex flex-col gap-4 absolute bottom-12 left-1/2 -translate-x-1/2">
-        <Button variant="primary" size="lg">
-          익명 아이디로 로그인하기
-        </Button>
-      </div>
+      <Tooltip open>
+        <TooltipTrigger asChild>
+          <div className="w-full px-6 flex flex-col gap-4 absolute bottom-12 left-1/2 -translate-x-1/2">
+            <Button variant="primary" size="lg">
+              익명 아이디로 로그인하기
+            </Button>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent sideOffset={16}>
+          계정 생성 없이 바로 시작할 수 있어요
+        </TooltipContent>
+      </Tooltip>
     </main>
   );
 }
