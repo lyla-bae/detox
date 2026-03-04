@@ -134,7 +134,8 @@
     @apply text-sm text-gray-300;
   }
   .item-subtext span:not(:last-child)::after {
-    @apply content-[''] inline-block w-px h-[9px] bg-line-gray mx-2;
+    content: "";
+    @apply inline-block w-px h-[9px] bg-line-gray mx-2;
   }
 }
 
