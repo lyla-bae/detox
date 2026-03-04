@@ -27,11 +27,18 @@ export default function FloatingButton({
   onClick,
 }: FloatingButtonProps) {
   const { icon, className } = variantMap[variant];
+  const handleClick = () => {
+    if (variant === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    onClick?.();
+  };
 
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={handleClick}
       className={cn("btn btn-rounded mr-6", className)}
     >
       <FontAwesomeIcon icon={icon} />
