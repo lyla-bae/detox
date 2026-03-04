@@ -3,10 +3,11 @@ import Avatar from "../components/avatar";
 import Header from "../components/header";
 import Input from "../components/input";
 import Button from "../components/button";
+import BottomNav from "../components/bottomNav";
 
 export default function Page() {
   return (
-    <main className="w-full min-h-screen flex flex-col items-center">
+    <main className="w-full min-h-screen flex flex-col items-center relative">
       <Header
         variant="text"
         leftText="내 정보"
@@ -45,6 +46,14 @@ export default function Page() {
           </Button>
         </div>
       </div>
+
+      <button className="absolute left-1/2 -translate-x-1/2 bottom-[108px] w-auto flex items-center justify-center gap-2 cursor-pointer">
+        <span className="body-lg font-normal text-gray-300 underline">
+          탈퇴하기
+        </span>
+      </button>
+
+      <BottomNav />
     </main>
   );
 }
