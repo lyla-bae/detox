@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "./reset.css";
+/* @import "./reset.css"; */
 
 :root {
   --background: #ffffff;
@@ -12,10 +12,23 @@
   --state-secondary: #0081a7;
   --state-danger: #d94d4c;
 
+  --blue-400: #33999f;
+  --blue-300: #54a9af;
+  --blue-200: #8ac4c8;
+  --blue-100: #b0d7da;
+  --blue-50: #e6f2f3;
+
+  --red-400: #e17170;
+  --red-300: #e68887;
+  --red-200: #eeadad;
+  --red-100: #f3c8c8;
+  --red-50: #fbeded;
+
   --gray-400: #222222;
   --gray-300: #616161;
-  --gray-200: #eeeeee;
-  --gray-100: #f5f5f5;
+  --gray-200: #9e9e9e;
+  --gray-100: #eeeeee;
+  --gray-50: #f5f5f5;
 
   --btn-disabled: #9e9e9e;
 
@@ -37,10 +50,23 @@
   --color-state-secondary: var(--state-secondary);
   --color-state-danger: var(--state-danger);
 
+  --color-blue-400: var(--blue-400);
+  --color-blue-300: var(--blue-300);
+  --color-blue-200: var(--blue-200);
+  --color-blue-100: var(--blue-100);
+  --color-blue-50: var(--blue-50);
+
+  --color-red-400: var(--red-400);
+  --color-red-300: var(--red-300);
+  --color-red-200: var(--red-200);
+  --color-red-100: var(--red-100);
+  --color-red-50: var(--red-50);
+
   --color-gray-400: var(--gray-400);
   --color-gray-300: var(--gray-300);
   --color-gray-200: var(--gray-200);
   --color-gray-100: var(--gray-100);
+  --color-gray-50: var(--gray-50);
 
   --color-white: var(--white);
   --color-black: var(--black);
@@ -52,6 +78,11 @@
   ****************************/
   --font-sans: var(--font-pretendard);
   --font-pretendard: var(--font-pretendard);
+
+  /****************************
+  * shadows
+  ****************************/
+  --shadow-xl: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
 /****************************
@@ -84,6 +115,18 @@
 
   .btn-disabled {
     @apply bg-btn-disabled text-white cursor-not-allowed;
+  }
+}
+
+/****************************
+  * SubscriptionCard Components
+  ****************************/
+@layer components {
+  .item-subtext {
+    @apply text-sm text-gray-300;
+  }
+  .item-subtext span:not(:last-child)::after {
+    @apply content-[''] inline-block w-px h-[9px] bg-gray-100 mx-2;
   }
 }
 
