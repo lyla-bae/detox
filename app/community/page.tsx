@@ -2,7 +2,7 @@
 import CommunityList from "./_components/community-list";
 import BrandTabs from "./_components/brand-tabs";
 import Header from "../components/header";
-import BottomNav from "../components/bottomNav";
+import BottomNav from "../components/bottom-nav";
 import { mockCommunityItems } from "./_data/mock-community";
 
 export default function CommunityListPage() {
