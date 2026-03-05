@@ -33,6 +33,7 @@ export default function BrandTabs() {
             brandType={key as SubscriptableBrandType}
             size="sm"
             isActive={activeKey === key}
+            onClick={() => setActiveKey(key)}
           />
           <span
             className={cn(
