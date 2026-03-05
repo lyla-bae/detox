@@ -17,7 +17,7 @@ type CommunityListProps = {
 
 export default function CommunityList({ items }: CommunityListProps) {
   return (
-    <ul className="grid grid-cols-1 gap-5 pt-6">
+    <ul className="grid grid-cols-1 gap-5 pt-6 px-6">
       {items.map((item) => (
         <li
           key={item.id}
@@ -35,7 +35,7 @@ export default function CommunityList({ items }: CommunityListProps) {
                 <span className="text-xs text-gray-300">{item.timeAgo}</span>
               </div>
             </div>
-            <div className="text-sm text-gray-300">
+            <div className="text-sm text-gray-300 mt-4">
               <h6 className="text-lg text-black font-bold leading-[140%] mb-2 line-clamp-2">
                 {item.title}
               </h6>

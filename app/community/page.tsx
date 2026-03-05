@@ -1,6 +1,7 @@
-import Link from "next/link";
-import CommunityList from "./_components/CommunityList";
+import CommunityList from "./_components/community-list";
+import BrandTabs from "./_components/brand-tabs";
 import Header from "../components/header";
+import BottomNav from "../components/bottomNav";
 
 const mockItems = [
   {
@@ -25,11 +26,13 @@ const mockItems = [
 
 export default function CommunityListPage() {
   return (
-    <main className="h-screen bg-gray-100">
-      <Header variant="text" leftText="커뮤니티" />
-      <main className="px-6">
+    <div className="h-screen bg-gray-100">
+      <Header variant="text" leftText="커뮤니티" rightContent="알람" />
+      <main className="">
+        <BrandTabs />
         <CommunityList items={mockItems} />
       </main>
-    </main>
+      <BottomNav />
+    </div>
   );
 }
