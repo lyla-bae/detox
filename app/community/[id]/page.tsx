@@ -2,11 +2,13 @@ import Avatar from "@/app/components/avatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { mockCommunityItems } from "../_data/mock-community";
+import { mockCommunityComments } from "../_data/mock-comments";
 import Header from "@/app/components/header";
 import KebabMenu from "@/app/components/kebabmenu";
 import CommunityList from "../_components/community-list";
 import Input from "@/app/components/input";
 import CommunityReactionStats from "../_components/community-reaction-stats";
+import CommentList from "../_components/comment-list";
 
 type CommunityDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -16,7 +18,11 @@ export default async function CommunityDetailPage({
   params,
 }: CommunityDetailPageProps) {
   const { id } = await params;
-  const item = mockCommunityItems.find((v) => v.id === Number(id));
+  const postId = Number(id);
+  const item = mockCommunityItems.find((v) => v.id === postId);
+  const commentItems = mockCommunityComments.filter(
+    (comment) => comment.postId === postId
+  );
   if (!item) return null; // 또는 notFound()
 
   return (
@@ -50,9 +56,11 @@ export default async function CommunityDetailPage({
             showLabel
             interactive
             likeActive
-            className="mb-5 px-6"
+            className="px-6"
             itemClassName="cursor-pointer"
           />
+
+          <CommentList items={commentItems} />
 
           <div className="relative px-5">
             <Input placeholder="댓글을 입력하세요" />
