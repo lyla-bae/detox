@@ -4,11 +4,11 @@ import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { mockCommunityItems } from "../_data/mock-community";
 import { mockCommunityComments } from "../_data/mock-comments";
 import Header from "@/app/components/header";
-import KebabMenu from "@/app/components/kebabmenu";
 import CommunityList from "../_components/community-list";
 import Input from "@/app/components/input";
 import CommunityReactionStats from "../_components/community-reaction-stats";
 import CommentList from "../_components/comment-list";
+import DetailKebab from "../_components/detail-kebab";
 
 type CommunityDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -27,7 +27,7 @@ export default async function CommunityDetailPage({
 
   return (
     <div>
-      <Header variant="back" rightContent={<KebabMenu />} />
+      <Header variant="back" rightContent={<DetailKebab variant="edit" />} />
       <main>
         <section className="px-6 py-4">
           <div className="flex items-center gap-2 ">
@@ -54,10 +54,7 @@ export default async function CommunityDetailPage({
             likeCount={item.likeCount}
             commentCount={item.commentCount}
             showLabel
-            interactive
-            likeActive
             className="px-6"
-            itemClassName="cursor-pointer"
           />
 
           <CommentList items={commentItems} />

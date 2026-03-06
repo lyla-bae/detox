@@ -62,7 +62,7 @@ export default function Header({
         </div>
 
         <div className="flex flex-1 justify-end mr-6 items-center">
-          <div className="header-lg   ">{rightContent}</div>
+          <div className="">{rightContent}</div>
         </div>
       </div>
     </header>

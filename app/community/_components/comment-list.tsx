@@ -1,7 +1,7 @@
 "use client";
 import Avatar from "@/app/components/avatar";
-import KebabMenu from "@/app/components/kebabmenu";
 import type { CommunityCommentItem } from "../_data/mock-comments";
+import DetailKebab from "./detail-kebab";
 
 type CommentListProps = {
   items: CommunityCommentItem[];
@@ -25,7 +25,7 @@ export default function CommentList({ items }: CommentListProps) {
                 <span className="text-xs text-gray-300">{item.timeAgo}</span>
               </div>
             </div>
-            <KebabMenu />
+            <DetailKebab />
           </div>
           <div className="text-sm text-gray-300">
             <p className="text-base leading-[140%] text-gray-300 line-clamp-3">
