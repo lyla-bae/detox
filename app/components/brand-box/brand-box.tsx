@@ -36,6 +36,7 @@ export default function BrandBox({
       alt={subscriptableBrand[brandType].label}
       width={imageSizeMap[size]}
       height={imageSizeMap[size]}
+      className="mix-blend-multiply"
     />
   );
 
@@ -51,7 +52,10 @@ export default function BrandBox({
     return (
       <button
         type="button"
-        className={cn(baseClasses, "outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2")}
+        className={cn(
+          baseClasses,
+          "outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2"
+        )}
         onClick={onClick}
         aria-pressed={isActive}
       >
