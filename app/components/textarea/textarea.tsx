@@ -18,7 +18,13 @@ export default function TextArea({
   placeholder,
   ...props
 }: Props) {
-  const currentLength = typeof value === "string" ? value.length : 0;
+  const [internalValue, setInternalValue] = React.useState("");
+  const resolvedValue = typeof value === "string" ? value : internalValue;
+  const currentLength = resolvedValue.length;
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (value === undefined) setInternalValue(e.target.value);
+    onChange?.(e);
+  };
 
   return (
     <div className="relative w-full flex flex-col gap-2">
@@ -27,17 +33,17 @@ export default function TextArea({
       )}
       <ShadcnTextarea
         className={cn(
-          "min-h-[200px] w-full resize-none rounded-2xl bg-gray-50 p-4 pb-10 border-none text-[16px] placeholder:text-gray-300 focus-visible:ring-0 shadow-none",
+          "min-h-[200px] w-full resize-none rounded-2xl bg-gray-50 p-4 pb-10 border-none placeholder:text-gray-300 focus-visible:ring-0 shadow-none",
           className
         )}
         maxLength={maxLength}
-        value={value}
-        onChange={onChange}
+        value={resolvedValue}
+        onChange={handleChange}
         placeholder={placeholder}
         {...props}
       />
 
-      <div className="absolute bottom-4 right-4 text-[12px] text-gray-300">
+      <div className="absolute bottom-4 right-4 text-xs text-gray-300">
         <span className={currentLength > 0 ? "text-gray-300" : ""}>
           {currentLength}
         </span>
