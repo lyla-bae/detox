@@ -34,6 +34,8 @@
 
   --btn-disabled: #9e9e9e;
 
+  --progress-bar: #d9d9d9;
+
   --white: #fff;
   --black: #000;
 }
@@ -76,6 +78,8 @@
   --color-black: var(--black);
 
   --color-btn-disabled: var(--btn-disabled);
+
+  --color-progress-bar: var(--progress-bar);
 
   /****************************
   * Fonts
@@ -144,6 +148,14 @@
   .item-subtext span:not(:last-child)::after {
     content: "";
     @apply inline-block w-px h-[9px] bg-line-gray mx-2;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
 
