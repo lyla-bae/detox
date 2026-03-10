@@ -14,9 +14,14 @@ export default function LoadingScreen({
     <main className="flex min-h-screen w-full flex-col items-center justify-center gap-4">
       <FontAwesomeIcon
         icon={faCircleNotch}
-        className="h-12 w-12 animate-spin text-blue-400 text-5xl"
+        className="h-20 w-20 animate-spin text-blue-400 text-3xl mb-5"
       />
-      <p className="body-md text-gray-400">{message}</p>
+      <div className="flex flex-col items-center justify-center gap-2">
+        <h1 className="header-md">{message}</h1>
+        <p className="title-md font-medium text-gray-300">
+          화면을 불러오는 중입니다.
+        </p>
+      </div>
     </main>
   );
 }
