@@ -1,13 +1,58 @@
+"use client";
+
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import Button from "../components/button";
+import LoadingScreen from "../components/loading-screen";
 import SnsLoginButton from "./_components/sns-login-button";
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
+import { useAnonymousLoginMutation, useCurrentUserQuery } from "@/query/users";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleExclamation } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "sonner";
 
 export default function Page() {
+  const router = useRouter();
+  const anonymousLoginMutation = useAnonymousLoginMutation();
+  const currentUserQuery = useCurrentUserQuery();
+
+  useEffect(() => {
+    if (currentUserQuery.data) {
+      router.replace("/");
+    }
+  }, [currentUserQuery.data, router]);
+
+  const handleAnonymousLogin = async () => {
+    try {
+      await anonymousLoginMutation.mutateAsync();
+      router.push("/");
+    } catch (error) {
+      console.error(error);
+      toast(
+        <span className="body-md inline-flex items-center gap-2">
+          <FontAwesomeIcon
+            icon={faCircleExclamation}
+            className="h-4 w-4 text-gray-400"
+          />
+          로그인에 실패했어요.
+        </span>,
+        {
+          className: "!justify-center",
+          style: { textAlign: "center" },
+        }
+      );
+    }
+  };
+
+  if (currentUserQuery.isPending) {
+    return <LoadingScreen message="잠시만 기다려 주세요." />;
+  }
+
   return (
     <main className="relative w-full min-h-screen flex flex-col items-center justify-center gap-20">
       <header className="flex flex-col items-center gap-4">
@@ -15,7 +60,6 @@ export default function Page() {
           디지털 구독 다이어트{" "}
           <span className="text-brand-primary">디톡스</span>
         </p>
-
         <Image src="/images/logo.png" alt="logo" width={200} height={55} />
       </header>
 
@@ -28,7 +72,17 @@ export default function Page() {
       <Tooltip open>
         <TooltipTrigger asChild>
           <div className="w-full px-6 flex flex-col gap-4 absolute bottom-12 left-1/2 -translate-x-1/2">
-            <Button variant="primary" size="lg">
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={handleAnonymousLogin}
+              loading={
+                anonymousLoginMutation.isPending || currentUserQuery.isPending
+              }
+              disabled={
+                anonymousLoginMutation.isPending || currentUserQuery.isPending
+              }
+            >
               익명 아이디로 로그인하기
             </Button>
           </div>
