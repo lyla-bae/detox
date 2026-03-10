@@ -12,6 +12,7 @@ import { Toaster } from "./components/toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import QueryProvider from "./providers/query-client-provider";
 import SupabaseAuthListener from "./components/supabase-auth-listener";
+import QueryProvider from "./providers/query-client-provider";
 
 const pretendard = localFont({
   src: "../public/fonts/PretendardVariable.woff2",
@@ -33,8 +34,8 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${pretendard.variable} antialiased`}>
       <body className={pretendard.className}>
+        <SupabaseAuthListener />
         <QueryProvider>
-          <SupabaseAuthListener />
           <TooltipProvider>
             <AlertProvider />
             <Toaster />
