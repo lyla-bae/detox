@@ -16,6 +16,7 @@ export const usersKeys = {
 } as const;
 
 export function useAnonymousLoginMutation() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: [...usersKeys.auth(), "anonymous-login"],
     mutationFn: async () => {
@@ -48,6 +49,9 @@ export function useAnonymousLoginMutation() {
       }
 
       return user;
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData([...usersKeys.auth(), "current-user"], user);
     },
   });
 }

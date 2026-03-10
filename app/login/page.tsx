@@ -54,7 +54,7 @@ export default function Page() {
     }
   };
 
-  if (isCurrentUserPending) {
+  if (isCurrentUserPending || currentUser) {
     return <LoadingScreen message="잠시만 기다려 주세요." />;
   }
 
