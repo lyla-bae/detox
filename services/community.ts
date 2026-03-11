@@ -9,10 +9,7 @@ import type { SubscriptableBrandType } from "@/app/utils/brand/type";
 import type { Tables } from "@/types/supabase.types";
 import { supabase } from "@/lib/supabase";
 
-type PostRow = Tables<"post">;
 type UserRow = Tables<"users">;
-type CommentRow = Tables<"comment">;
-type LikeRow = Tables<"likes">;
 
 export async function getCommunityList(
   service?: SubscriptableBrandType
@@ -80,10 +77,11 @@ export async function getCommunityList(
 
   return posts.map((post) => {
     const user = userMap.get(post.user_id);
+
     return {
       id: post.id,
       service: post.service as SubscriptableBrandType,
-      author: user?.nickname ?? "알수없는사용자",
+      author: user?.nickname ?? "알 수 없는 사용자",
       timeAgo: formatRelativeTime(post.created_at),
       title: post.title,
       content: post.content,
@@ -134,10 +132,11 @@ export async function getCommunityDetail(
   if (userError) throw userError;
   if (commentsError) throw commentsError;
   if (likesError) throw likesError;
+
   return {
     id: post.id,
     service: post.service as SubscriptableBrandType,
-    author: user?.nickname ?? "알수없는사용자",
+    author: user?.nickname ?? "알 수 없는 사용자",
     timeAgo: formatRelativeTime(post.created_at),
     title: post.title,
     content: post.content,
