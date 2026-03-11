@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { generateNickname } from "@/app/utils/nickname";
 import {
   getCurrentUser,
+  getUserProfile,
   signInAnonymously,
   signOut,
   upsertUser,
@@ -13,6 +14,7 @@ export const usersKeys = {
   all: ["users"],
   auth: () => [...usersKeys.all, "auth"],
   profile: () => [...usersKeys.all, "profile"],
+  profileById: (userId: string) => [...usersKeys.profile(), userId],
 } as const;
 
 export function useAnonymousLoginMutation() {
@@ -73,6 +75,9 @@ export function useLogoutMutation() {
       queryClient.removeQueries({
         queryKey: [...usersKeys.auth(), "current-user"],
       });
+      queryClient.removeQueries({
+        queryKey: usersKeys.profile(),
+      });
     },
   });
 }
@@ -89,5 +94,25 @@ export function useCurrentUserQuery() {
 
       return data.user;
     },
+  });
+}
+
+export function useUserProfileQuery(userId?: string) {
+  return useQuery({
+    queryKey: usersKeys.profileById(userId ?? ""),
+    queryFn: async () => {
+      if (!userId) {
+        return null;
+      }
+
+      const { data, error } = await getUserProfile(userId);
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: Boolean(userId),
   });
 }

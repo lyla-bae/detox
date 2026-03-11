@@ -10,7 +10,11 @@ import BottomNav from "../components/bottom-nav";
 import LoadingScreen from "../components/loading-screen";
 import TextButton from "../components/text-button";
 import { useRouter } from "next/navigation";
-import { useCurrentUserQuery, useLogoutMutation } from "@/query/users";
+import {
+  useCurrentUserQuery,
+  useLogoutMutation,
+  useUserProfileQuery,
+} from "@/query/users";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "sonner";
@@ -19,6 +23,7 @@ export default function Page() {
   const router = useRouter();
   const logoutMutation = useLogoutMutation();
   const currentUserQuery = useCurrentUserQuery();
+  const userProfileQuery = useUserProfileQuery(currentUserQuery.data?.id);
 
   useEffect(() => {
     if (!currentUserQuery.isPending && !currentUserQuery.data) {
@@ -48,9 +53,19 @@ export default function Page() {
     }
   };
 
-  if (currentUserQuery.isPending || !currentUserQuery.data) {
+  if (
+    currentUserQuery.isPending ||
+    !currentUserQuery.data ||
+    userProfileQuery.isPending
+  ) {
     return <LoadingScreen message="내 정보를 불러오는 중이에요." />;
   }
+
+  const nickname = userProfileQuery.data?.nickname ?? "사용자";
+  const email =
+    userProfileQuery.data?.email ??
+    currentUserQuery.data.email ??
+    "이메일 정보가 없어요.";
 
   return (
     <main className="w-full min-h-screen flex flex-col items-center relative">
@@ -83,15 +98,17 @@ export default function Page() {
             </button>
           </div>
           <div className="flex flex-col gap-1 items-center">
-            <span className="body-lg font-bold">김철수</span>
-            <span className="body-md font-normal text-gray-300">
-              kim@gmail.com
-            </span>
+            <span className="body-lg font-bold">{nickname}</span>
+            <span className="body-md font-normal text-gray-300">{email}</span>
           </div>
         </div>
 
         <div className="flex flex-col gap-4 items-center">
-          <Input label="닉네임" placeholder="닉네임을 입력해주세요" />
+          <Input
+            label="닉네임"
+            placeholder="닉네임을 입력해주세요"
+            defaultValue={userProfileQuery.data?.nickname ?? ""}
+          />
           <Button variant="primary" size="lg">
             저장하기
           </Button>
