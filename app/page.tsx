@@ -5,9 +5,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleRight } from "@fortawesome/free-solid-svg-icons/faAngleRight";
 import Link from "next/link";
 import Image from "next/image";
-import SubscriptionList from "./components/subscriptionList";
+import SubscriptionList from "./components/subscription-list";
 import Button from "./components/button";
-import BottomNav from "./components/bottomNav";
+import BottomNav from "./components/bottom-nav";
 import { subscriptableBrand } from "./utils/brand/brand";
 import type { SubscriptableBrandType } from "./utils/brand/type";
 
