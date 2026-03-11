@@ -25,6 +25,8 @@ interface SubscriptionItem {
 }
 
 export default function Home() {
+  // 실제 데이터와 무관하게 홈 상단/빈 상태 UI만 분기하고, 목록은 목업 데이터를 유지합니다.
+  const showSubscribedUiState = true;
   const subsList: Omit<SubscriptionItem, "name">[] = [
     //더미 데이터
     {
@@ -71,7 +73,6 @@ export default function Home() {
     ...item,
     name: subscriptableBrand[item.brandType].label,
   }));
-  const hasSubscription = subscriptionList.length > 0;
   const subscriptionCount = subscriptionList.length;
   const totalPrice = subscriptionList.reduce(
     (sum, item) => sum + (item.price ?? 0),
@@ -85,7 +86,7 @@ export default function Home() {
         <section className="px-6 py-5 mb-4 bg-white grid grid-cols-[1fr_100px] items-center justify-between">
           <div className="flex flex-col gap-4">
             <div className="title">
-              {hasSubscription ? (
+              {showSubscribedUiState ? (
                 <>
                   <h2 className="text-2xl">이번달 구독료로</h2>
                   <h1 className="header-md">
@@ -112,7 +113,7 @@ export default function Home() {
             </Link>
           </div>
           <div>
-            {hasSubscription ? (
+            {showSubscribedUiState ? (
               <Image
                 src="/images/emoji/main-coffee.png"
                 alt="메인 이미지"
@@ -157,7 +158,7 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            {!hasSubscription && (
+            {!showSubscribedUiState && (
               <div className="absolute w-full h-full flex flex-col items-center justify-center gap-4 text-center bg-linear-to-bl from-white/50 to-white backdrop-blur-[1.5px]">
                 <h6 className="title-md text-black">
                   구독 서비스를 추가 하세요
