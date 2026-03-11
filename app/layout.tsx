@@ -34,13 +34,11 @@ export default function RootLayout({
     <html lang="ko" className={`${pretendard.variable} antialiased`}>
       <body className={pretendard.className}>
         <SupabaseAuthListener />
-        <QueryProvider>
-          <TooltipProvider>
-            <AlertProvider />
-            <Toaster />
-            {children}
-          </TooltipProvider>
-        </QueryProvider>
+        <TooltipProvider>
+          <AlertProvider />
+          <Toaster />
+          <div className="max-w-(--max-width) mx-auto">{children}</div>
+        </TooltipProvider>
       </body>
     </html>
   );
