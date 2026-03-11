@@ -81,8 +81,7 @@ export default function Page() {
               variant="primary"
               size="lg"
               onClick={handleAnonymousLogin}
-              loading={isAnonymousLoginPending || isCurrentUserPending}
-              disabled={isAnonymousLoginPending || isCurrentUserPending}
+              loading={isAnonymousLoginPending}
             >
               익명 아이디로 로그인하기
             </Button>
