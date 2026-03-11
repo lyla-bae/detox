@@ -1,15 +1,24 @@
 "use client";
 
-import { useState } from "react";
-
 import BrandBox from "@/app/components/brand-box";
 import { subscriptableBrand } from "@/app/utils/brand/brand";
 import { SubscriptableBrandType } from "@/app/utils/brand/type";
 import { cn } from "@/lib/utils";
+import { CommunityServiceFilter } from "../_types";
 
-export default function BrandTabs() {
-  const brandTabs = Object.entries(subscriptableBrand);
-  const [activeKey, setActiveKey] = useState<string>(brandTabs[0]?.[0] ?? "");
+type BrandTabsPros = {
+  value: CommunityServiceFilter;
+  onChange: (value: CommunityServiceFilter) => void;
+};
+
+export default function BrandTabs({ value, onChange }: BrandTabsProps) {
+  const brandTabs = [
+    { key: "all", label: "전체" },
+    ...Object.entries(subscriptableBrand).map(([key, brand]) => ({
+      key,
+      label: brand.label,
+    })),
+  ];
 
   return (
     <div
@@ -18,32 +27,70 @@ export default function BrandTabs() {
         event.currentTarget.scrollLeft += event.deltaY;
       }}
     >
-      {brandTabs.map(([key, brand]) => (
-        <button
-          key={key}
-          type="button"
-          aria-pressed={activeKey === key}
-          onClick={() => setActiveKey(key)}
-          className={cn(
-            "flex min-w-fit max-w-12 flex-col items-center gap-2 transition-opacity",
-            activeKey === key ? "opacity-100" : "opacity-60"
-          )}
-        >
-          <BrandBox
-            brandType={key as SubscriptableBrandType}
-            size="sm"
-            isActive={activeKey === key}
-          />
-          <span
+      {brandTabs.map((tab) => {
+        const isActive = value === tab.key;
+
+        if (tab.key === "all") {
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => onChange("all")}
+              className={cn(
+                "flex min-w-fit flex-col items-center gap-2 transition-opacity",
+                isActive ? "opacity-100" : "opacity-60"
+              )}
+            >
+              <div
+                className={cn(
+                  "flex h-12 w-12 items-center justify-center rounded-2xl border",
+                  isActive
+                    ? "border-brand-primary bg-brand-primary text-white"
+                    : "border-gray-100 bg-white text-gray-400"
+                )}
+              >
+                전체
+              </div>
+              <span
+                className={cn(
+                  "text-sm leading-[110%]",
+                  isActive ? "font-semibold text-black" : "text-black"
+                )}
+              >
+                전체
+              </span>
+            </button>
+          );
+        }
+
+        return (
+          <button
+            key={tab.key}
+            type="button"
+            aria-pressed={isActive}
+            onClick={() => onChange(tab.key as CommunityServiceFilter)}
             className={cn(
-              "max-w-12 text-center text-sm leading-[110%] whitespace-normal break-keep",
-              activeKey === key ? "font-semibold text-black" : "text-black"
+              "flex min-w-fit max-w-12 flex-col items-center gap-2 transition-opacity",
+              isActive ? "opacity-100" : "opacity-60"
             )}
           >
-            {brand.label}
-          </span>
-        </button>
-      ))}
+            <BrandBox
+              brandType={tab.key as keyof typeof subscriptableBrand}
+              size="sm"
+              isActive={isActive}
+            />
+            <span
+              className={cn(
+                "max-w-12 text-center text-sm leading-[110%] whitespace-normal break-keep",
+                isActive ? "font-semibold text-black" : "text-black"
+              )}
+            >
+              {tab.label}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
