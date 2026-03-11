@@ -116,14 +116,14 @@ export default function Home() {
             {showSubscribedUiState ? (
               <Image
                 src="/images/emoji/main-coffee.png"
-                alt="메인 이미지"
+                alt=""
                 width={100}
                 height={100}
               />
             ) : (
               <Image
                 src="/images/emoji/main-nodata.png"
-                alt="메인 이미지"
+                alt=""
                 width={100}
                 height={100}
               />
