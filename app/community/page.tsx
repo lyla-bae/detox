@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { subscriptableBrand } from "@/app/utils/brand/brand";
 import type { CommunityServiceFilter } from "./_types";
 import { useCommunityListQuery } from "@/query/community";
+import FloatingButton from "../components/floating-button";
 
 export default function CommunityListPage() {
   const router = useRouter();
@@ -79,6 +80,7 @@ export default function CommunityListPage() {
       </p>
     </div>
   );
+
   return (
     <div className="bg-gray-100 pb-15 min-h-screen">
       <Header variant="text" leftText="커뮤니티" rightContent="알람" />
@@ -97,6 +99,10 @@ export default function CommunityListPage() {
               <CommunityList items={communityListQuery.data} />
             )}
         </section>
+
+        <div className="fixed right-0 bottom-24 z-10">
+          <FloatingButton variant="create" />
+        </div>
       </main>
 
       <BottomNav />

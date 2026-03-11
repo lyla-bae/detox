@@ -146,3 +146,17 @@ export async function getCommunityDetail(
     createdAt: post.created_at,
   };
 }
+
+export async function createCommunityPost(params: {
+  userId: string;
+  service: SubscriptableBrandType;
+  title: string;
+  content: string;
+}) {
+  return supabase.from("post").insert({
+    user_id: params.userId,
+    service: params.service,
+    title: params.title,
+    content: params.content,
+  });
+}

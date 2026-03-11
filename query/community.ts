@@ -1,8 +1,12 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SubscriptableBrandType } from "@/app/utils/brand/type";
-import { getCommunityDetail, getCommunityList } from "@/services/community";
+import {
+  createCommunityPost,
+  getCommunityDetail,
+  getCommunityList,
+} from "@/services/community";
 
 export const communityKeys = {
   all: ["community"],
@@ -27,5 +31,18 @@ export function useCommunityDetailQuery(postId: string) {
     queryKey: communityKeys.detail(postId),
     queryFn: () => getCommunityDetail(postId),
     enabled: Boolean(postId),
+  });
+}
+
+export function useCreateCommunityPostMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createCommunityPost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: communityKeys.lists(),
+      });
+    },
   });
 }
