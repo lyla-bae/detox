@@ -21,7 +21,7 @@ export default function BrandTabs({ value, onChange }: BrandTabsProps) {
 
   return (
     <div
-      className="tab-wrap ml-6 flex gap-2 overflow-x-auto pt-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      className="tab-wrap flex gap-2 overflow-x-auto mt-5 ml-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       onWheel={(event) => {
         event.currentTarget.scrollLeft += event.deltaY;
       }}
@@ -37,13 +37,12 @@ export default function BrandTabs({ value, onChange }: BrandTabsProps) {
               aria-pressed={isActive}
               onClick={() => onChange("all")}
               className={cn(
-                "flex min-w-fit flex-col items-center gap-2 transition-opacity",
-                isActive ? "opacity-100" : "opacity-60"
+                "flex min-w-fit flex-col items-center gap-2 transition-opacity"
               )}
             >
               <div
                 className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-2xl border",
+                  "flex h-12 w-12 items-center justify-center rounded-xl border",
                   isActive
                     ? "border-brand-primary bg-brand-primary text-white"
                     : "border-gray-100 bg-white text-gray-400"
@@ -70,8 +69,7 @@ export default function BrandTabs({ value, onChange }: BrandTabsProps) {
             aria-pressed={isActive}
             onClick={() => onChange(tab.key as CommunityServiceFilter)}
             className={cn(
-              "flex min-w-fit max-w-12 flex-col items-center gap-2 transition-opacity",
-              isActive ? "opacity-100" : "opacity-60"
+              "flex min-w-fit max-w-12 flex-col items-center gap-2 transition-opacity"
             )}
           >
             <BrandBox
