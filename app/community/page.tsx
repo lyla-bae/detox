@@ -12,6 +12,7 @@ import { subscriptableBrand } from "@/app/utils/brand/brand";
 import type { CommunityServiceFilter } from "./_types";
 import { useInfiniteCommunityListQuery } from "@/query/community";
 import FloatingButton from "../components/floating-button";
+import Image from "next/image";
 
 export default function CommunityListPage() {
   const router = useRouter();
@@ -117,7 +118,9 @@ export default function CommunityListPage() {
   );
 
   const renderEmpty = () => (
-    <div className="flex flex-col items-center px-6 py-12 text-center">
+    <div className="flex flex-col gap-5 items-center px-6 py-12 text-center">
+      <Image src="/images/emoji/no-alarm.png" alt="" width={80} height={80} />
+
       <p className="body-md text-gray-400">
         {selectedService === "all"
           ? "아직 등록된 게시글이 없어요."
