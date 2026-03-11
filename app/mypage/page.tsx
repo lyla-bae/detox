@@ -8,6 +8,7 @@ import Input from "../components/input";
 import Button from "../components/button";
 import BottomNav from "../components/bottom-nav";
 import LoadingScreen from "../components/loading-screen";
+import TextButton from "../components/text-button";
 import { useRouter } from "next/navigation";
 import { useCurrentUserQuery, useLogoutMutation } from "@/query/users";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -57,13 +58,14 @@ export default function Page() {
         variant="text"
         leftText="내 정보"
         rightContent={
-          <button
-            className="flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          <TextButton
+            size="md"
+            className="flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={logoutMutation.isPending}
             onClick={handleLogout}
           >
-            <span className="body-lg font-normal text-gray-300">로그아웃</span>
-          </button>
+            로그아웃
+          </TextButton>
         }
       />
 
@@ -97,11 +99,13 @@ export default function Page() {
       </div>
 
       {!currentUserQuery.data?.is_anonymous ? (
-        <button className="absolute left-1/2 -translate-x-1/2 bottom-[108px] w-auto flex items-center justify-center gap-2 cursor-pointer">
-          <span className="body-lg font-normal text-gray-300 underline">
-            탈퇴하기
-          </span>
-        </button>
+        <TextButton
+          size="md"
+          underline
+          className="absolute left-1/2 -translate-x-1/2 bottom-[108px] w-auto flex items-center justify-center gap-2"
+        >
+          탈퇴하기
+        </TextButton>
       ) : null}
 
       <BottomNav />
