@@ -1,6 +1,7 @@
 import { formatRelativeTime } from "@/app/utils/date/formatRelativeTime";
 import { supabase } from "@/lib/supabase";
 import type {
+  CommunityCommentItemData,
   CommunityDetailData,
   CommunityListCursor,
   CommunityListPage,
@@ -176,7 +177,6 @@ export async function getCommunityDetail(
     createdAt: post.created_at,
   };
 }
-
 //작성
 export async function createCommunityPost(params: {
   userId: string;
@@ -191,7 +191,6 @@ export async function createCommunityPost(params: {
     content: params.content,
   });
 }
-
 //수정
 export async function updateCommunityPost(params: {
   postId: string;
@@ -243,4 +242,145 @@ export async function deleteCommunityPost(params: {
   }
 
   return data;
+}
+
+//댓글리스트
+export async function getCommunityComments(
+  postId: string
+): Promise<CommunityCommentItemData[]> {
+  const { data: comments, error: commentsError } = await supabase
+    .from("comment")
+    .select("*")
+    .eq("post_id", postId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true });
+
+  if (commentsError) {
+    throw commentsError;
+  }
+
+  if (!comments || comments.length === 0) {
+    return [];
+  }
+
+  const userIds = [...new Set(comments.map((comment) => comment.user_id))];
+  const { data: users, error: usersError } = await supabase
+    .from("users")
+    .select("*")
+    .in("id", userIds)
+    .is("deleted_at", null);
+
+  if (usersError) {
+    throw usersError;
+  }
+
+  const userMap = new Map<string, UserRow>(
+    (users ?? []).map((user) => [user.id, user])
+  );
+
+  return comments.map((comment) => {
+    const user = userMap.get(comment.user_id);
+
+    return {
+      id: comment.id,
+      postId: comment.post_id,
+      userId: comment.user_id,
+      author: user?.nickname ?? "알 수 없는 사용자",
+      timeAgo: formatRelativeTime(comment.created_at),
+      content: comment.content,
+      thumbUrl: user?.profile_image ?? "/images/default-user.png",
+      createdAt: comment.created_at,
+    };
+  });
+}
+
+//댓글작성
+export async function createCommunityComment(params: {
+  postId: string;
+  userId: string;
+  content: string;
+}) {
+  const { data, error } = await supabase
+    .from("comment")
+    .insert({
+      post_id: params.postId,
+      user_id: params.userId,
+      content: params.content,
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("댓글 작성에 실패했어요.");
+  }
+
+  return data;
+}
+
+//좋아요상태
+export async function getCommunityPostLikeStatus(params: {
+  postId: string;
+  userId: string;
+}) {
+  const { data, error } = await supabase
+    .from("likes")
+    .select("id")
+    .eq("post_id", params.postId)
+    .eq("user_id", params.userId)
+    .limit(1);
+
+  if (error) {
+    throw error;
+  }
+
+  return (data?.length ?? 0) > 0;
+}
+
+//좋아요토글
+export async function toggleCommunityPostLike(params: {
+  postId: string;
+  userId: string;
+}) {
+  const { data: existingLikes, error: likesError } = await supabase
+    .from("likes")
+    .select("id")
+    .eq("post_id", params.postId)
+    .eq("user_id", params.userId);
+
+  if (likesError) {
+    throw likesError;
+  }
+
+  if ((existingLikes?.length ?? 0) > 0) {
+    const { error: deleteError } = await supabase
+      .from("likes")
+      .delete()
+      .in(
+        "id",
+        existingLikes!.map((like) => like.id)
+      );
+
+    if (deleteError) {
+      throw deleteError;
+    }
+
+    return { liked: false };
+  }
+
+  const { data, error } = await supabase
+    .from("likes")
+    .insert({
+      post_id: params.postId,
+      user_id: params.userId,
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("좋아요 처리에 실패했어요.");
+  }
+
+  return { liked: true };
 }

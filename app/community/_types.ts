@@ -17,6 +17,17 @@ export type CommunityDetailData = CommunityListItemData & {
   createdAt: string;
 };
 
+export type CommunityCommentItemData = {
+  id: string;
+  postId: string;
+  userId: string;
+  author: string;
+  timeAgo: string;
+  content: string;
+  thumbUrl: string;
+  createdAt: string;
+};
+
 export type CommunityListCursor = {
   createdAt: string;
   id: string;
