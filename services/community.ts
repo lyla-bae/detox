@@ -10,6 +10,7 @@ import type { Tables } from "@/types/supabase.types";
 
 type UserRow = Tables<"users">;
 
+//리스트
 export async function getCommunityListPage(params: {
   service?: SubscriptableBrandType;
   cursor?: CommunityListCursor | null;
@@ -119,6 +120,7 @@ export async function getCommunityListPage(params: {
   };
 }
 
+//상세
 export async function getCommunityDetail(
   postId: string
 ): Promise<CommunityDetailData | null> {
@@ -162,6 +164,7 @@ export async function getCommunityDetail(
 
   return {
     id: post.id,
+    userId: post.user_id,
     service: post.service as SubscriptableBrandType,
     author: user?.nickname ?? "알 수 없는 사용자",
     timeAgo: formatRelativeTime(post.created_at),
@@ -174,6 +177,7 @@ export async function getCommunityDetail(
   };
 }
 
+//작성
 export async function createCommunityPost(params: {
   userId: string;
   service: SubscriptableBrandType;
@@ -186,4 +190,57 @@ export async function createCommunityPost(params: {
     title: params.title,
     content: params.content,
   });
+}
+
+//수정
+export async function updateCommunityPost(params: {
+  postId: string;
+  userId: string;
+  service: SubscriptableBrandType;
+  title: string;
+  content: string;
+}) {
+  const { data, error } = await supabase
+    .from("post")
+    .update({
+      service: params.service,
+      title: params.title,
+      content: params.content,
+    })
+    .eq("id", params.postId)
+    .eq("user_id", params.userId)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("수정할 게시글이 없거나 권한이 없습니다.");
+  }
+
+  return data;
+}
+
+//삭제
+export async function deleteCommunityPost(params: {
+  postId: string;
+  userId: string;
+}) {
+  const { data, error } = await supabase
+    .from("post")
+    .update({
+      deleted_at: new Date().toISOString(),
+    })
+    .eq("id", params.postId)
+    .eq("user_id", params.userId)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("삭제할 게시글이 없거나 권한이 없습니다.");
+  }
+
+  return data;
 }
