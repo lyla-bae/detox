@@ -13,6 +13,7 @@ export type CommunityListItemData = {
   thumbUrl: string;
 };
 export type CommunityDetailData = CommunityListItemData & {
+  userId: string;
   createdAt: string;
 };
 
