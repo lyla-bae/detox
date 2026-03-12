@@ -1,24 +1,22 @@
 "use client";
+
 import Avatar from "@/app/components/avatar";
 import type { CommunityCommentItemData } from "../_types";
-import {
-  useDeleteCommunityCommentMutation,
-  useReportCommunityCommentMutation,
-} from "@/query/community";
 import DetailKebab from "./detail-kebab";
 
 type CommentListProps = {
   items: CommunityCommentItemData[];
   currentUserId?: string;
+  onDeleteComment?: (comment: CommunityCommentItemData) => Promise<void> | void;
+  onReportComment?: (comment: CommunityCommentItemData) => Promise<void> | void;
 };
 
 export default function CommentList({
   items,
   currentUserId,
+  onDeleteComment,
+  onReportComment,
 }: CommentListProps) {
-  const deleteCommunityCommentMutation = useDeleteCommunityCommentMutation();
-  const reportCommunityCommentMutation = useReportCommunityCommentMutation();
-
   if (items.length === 0) {
     return (
       <div className="py-8 text-center">
@@ -50,23 +48,12 @@ export default function CommentList({
                 variant={currentUserId === item.userId ? "edit" : "default"}
                 onDelete={
                   currentUserId === item.userId
-                    ? async () => {
-                        await deleteCommunityCommentMutation.mutateAsync({
-                          commentId: item.id,
-                          postId: item.postId,
-                          userId: currentUserId,
-                        });
-                      }
+                    ? () => onDeleteComment?.(item)
                     : undefined
                 }
                 onReport={
                   currentUserId !== item.userId
-                    ? async () => {
-                        await reportCommunityCommentMutation.mutateAsync({
-                          commentId: item.id,
-                          reporterUserId: currentUserId,
-                        });
-                      }
+                    ? () => onReportComment?.(item)
                     : undefined
                 }
               />

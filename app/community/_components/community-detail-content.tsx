@@ -13,7 +13,10 @@ import {
   useCommunityPostLikeStatusQuery,
   useCreateCommunityCommentMutation,
   useCommunityDetailQuery,
+  useDeleteCommunityCommentMutation,
   useDeleteCommunityPostMutation,
+  useReportCommunityCommentMutation,
+  useReportCommunityPostMutation,
   useToggleCommunityPostLikeMutation,
 } from "@/query/community";
 import CommentList from "./comment-list";
@@ -21,7 +24,7 @@ import CommunityReactionStats from "./community-reaction-stats";
 import DetailKebab from "./detail-kebab";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useReportCommunityPostMutation } from "@/query/community";
+import type { CommunityCommentItemData } from "../_types";
 
 type CommunityDetailContentProps = {
   postId: string;
@@ -42,7 +45,9 @@ export default function CommunityDetailContent({
     currentUserQuery.data?.id
   );
   const createCommentMutation = useCreateCommunityCommentMutation();
+  const deleteCommunityCommentMutation = useDeleteCommunityCommentMutation();
   const deleteCommunityPostMutation = useDeleteCommunityPostMutation();
+  const reportCommunityCommentMutation = useReportCommunityCommentMutation();
   const toggleLikeMutation = useToggleCommunityPostLikeMutation();
   const reportCommunityPostMutation = useReportCommunityPostMutation();
 
@@ -169,6 +174,29 @@ export default function CommunityDetailContent({
     });
   };
 
+  const handleDeleteComment = async (commentItem: CommunityCommentItemData) => {
+    if (!currentUserQuery.data?.id) {
+      throw new Error("댓글을 삭제하려면 로그인이 필요해요.");
+    }
+
+    await deleteCommunityCommentMutation.mutateAsync({
+      commentId: commentItem.id,
+      postId: commentItem.postId,
+      userId: currentUserQuery.data.id,
+    });
+  };
+
+  const handleReportComment = async (commentItem: CommunityCommentItemData) => {
+    if (!currentUserQuery.data?.id) {
+      throw new Error("댓글을 신고하려면 로그인이 필요해요.");
+    }
+
+    await reportCommunityCommentMutation.mutateAsync({
+      commentId: commentItem.id,
+      reporterUserId: currentUserQuery.data.id,
+    });
+  };
+
   return (
     <main>
       <section className="px-6 py-4">
@@ -229,6 +257,8 @@ export default function CommunityDetailContent({
           <CommentList
             items={commentsQuery.data ?? []}
             currentUserId={currentUserQuery.data?.id}
+            onDeleteComment={handleDeleteComment}
+            onReportComment={handleReportComment}
           />
         )}
 
