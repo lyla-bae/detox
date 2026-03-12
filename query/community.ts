@@ -41,17 +41,20 @@ export const communityKeys = {
   details: () => [...communityKeys.all, "detail"],
   detail: (postId: string) => [...communityKeys.details(), postId],
   recommendations: () => [...communityKeys.all, "recommendation"],
-  recommendedPosts: (postId: string, service?: SubscriptableBrandType) => [
+  recommendationList: (postId: string) => [
     ...communityKeys.recommendations(),
     postId,
+  ],
+  recommendedPosts: (postId: string, service?: SubscriptableBrandType) => [
+    ...communityKeys.recommendationList(postId),
     service ?? "all",
   ],
   comments: () => [...communityKeys.all, "comment"],
   commentList: (postId: string) => [...communityKeys.comments(), postId],
   likes: () => [...communityKeys.all, "like"],
+  likeStatuses: (postId: string) => [...communityKeys.likes(), postId],
   likeStatus: (postId: string, userId?: string) => [
-    ...communityKeys.likes(),
-    postId,
+    ...communityKeys.likeStatuses(postId),
     userId ?? "guest",
   ],
 } as const;
@@ -142,14 +145,23 @@ function applyOptimisticLikeToInfiniteData(
   };
 }
 
+async function invalidateCommunityCollections(queryClient: QueryClient) {
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: communityKeys.lists(),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: communityKeys.recommendations(),
+    }),
+  ]);
+}
+
 async function invalidateCommunityPost(
   queryClient: QueryClient,
   postId: string
 ) {
   await Promise.all([
-    queryClient.invalidateQueries({
-      queryKey: communityKeys.lists(),
-    }),
+    invalidateCommunityCollections(queryClient),
     queryClient.invalidateQueries({
       queryKey: communityKeys.detail(postId),
     }),
@@ -227,11 +239,10 @@ export function useCreateCommunityPostMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    networkMode: "always",
     mutationFn: createCommunityPost,
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: communityKeys.lists(),
-      });
+      void invalidateCommunityCollections(queryClient);
     },
   });
 }
@@ -241,6 +252,7 @@ export function useUpdateCommunityPostMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    networkMode: "always",
     mutationFn: updateCommunityPost,
     onSuccess: async (_, variables) => {
       await invalidateCommunityPost(queryClient, variables.postId);
@@ -254,8 +266,25 @@ export function useDeleteCommunityPostMutation() {
 
   return useMutation({
     mutationFn: deleteCommunityPost,
-    onSuccess: async (_, variables) => {
-      await invalidateCommunityPost(queryClient, variables.postId);
+    onSuccess: (_, variables) => {
+      void Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: communityKeys.lists(),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: communityKeys.recommendations(),
+        }),
+      ]);
+      queryClient.removeQueries({
+        queryKey: communityKeys.likeStatuses(variables.postId),
+      });
+      queryClient.removeQueries({
+        queryKey: communityKeys.commentList(variables.postId),
+        exact: true,
+      });
+      queryClient.removeQueries({
+        queryKey: communityKeys.recommendationList(variables.postId),
+      });
     },
   });
 }

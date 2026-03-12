@@ -6,6 +6,7 @@ import Header from "@/app/components/header";
 import CommunityForm from "../../_components/community-form";
 import BrandTabs from "../../_components/brand-tabs";
 import Button from "@/app/components/button";
+import { useToast } from "@/app/hooks/useToast";
 import type { CommunityDetailData, CommunityServiceValue } from "../../_types";
 import { useCurrentUserQuery } from "@/query/users";
 import {
@@ -27,6 +28,7 @@ function CommunityEditFormContent({
   initialPost,
 }: CommunityEditFormContentProps) {
   const router = useRouter();
+  const { error } = useToast();
   const updateCommunityPostMutation = useUpdateCommunityPostMutation();
   const [selectedService, setSelectedService] =
     useState<CommunityServiceValue>(initialPost.service);
@@ -36,6 +38,10 @@ function CommunityEditFormContent({
   const isFormValid = title.trim().length > 0 && content.trim().length > 0;
 
   const handleSubmit = async () => {
+    if (!isFormValid || updateCommunityPostMutation.isPending) {
+      return;
+    }
+
     try {
       await updateCommunityPostMutation.mutateAsync({
         postId,
@@ -46,8 +52,9 @@ function CommunityEditFormContent({
       });
 
       router.push(`/community/${postId}`);
-    } catch (error) {
-      console.error(error);
+    } catch (updatePostError) {
+      console.error(updatePostError);
+      error("게시글 수정에 실패했어요.");
     }
   };
 
