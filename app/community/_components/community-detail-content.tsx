@@ -1,16 +1,26 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/app/components/avatar";
 import Button from "@/app/components/button";
+import TextButton from "@/app/components/text-button";
+import { useToast } from "@/app/hooks/useToast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentUserQuery } from "@/query/users";
 import {
+  useCommunityCommentsQuery,
+  useCommunityPostLikeStatusQuery,
+  useCreateCommunityCommentMutation,
   useCommunityDetailQuery,
   useDeleteCommunityPostMutation,
+  useToggleCommunityPostLikeMutation,
 } from "@/query/community";
+import CommentList from "./comment-list";
 import CommunityReactionStats from "./community-reaction-stats";
 import DetailKebab from "./detail-kebab";
+import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 type CommunityDetailContentProps = {
   postId: string;
@@ -20,9 +30,19 @@ export default function CommunityDetailContent({
   postId,
 }: CommunityDetailContentProps) {
   const router = useRouter();
+  const { success, error } = useToast();
+  const [comment, setComment] = useState("");
+  const commentInputRef = useRef<HTMLInputElement | null>(null);
   const currentUserQuery = useCurrentUserQuery();
   const communityDetailQuery = useCommunityDetailQuery(postId);
+  const commentsQuery = useCommunityCommentsQuery(postId);
+  const likeStatusQuery = useCommunityPostLikeStatusQuery(
+    postId,
+    currentUserQuery.data?.id
+  );
+  const createCommentMutation = useCreateCommunityCommentMutation();
   const deleteCommunityPostMutation = useDeleteCommunityPostMutation();
+  const toggleLikeMutation = useToggleCommunityPostLikeMutation();
 
   if (communityDetailQuery.isPending) {
     return (
@@ -94,6 +114,48 @@ export default function CommunityDetailContent({
     router.push("/community");
   };
 
+  const handleToggleLike = async () => {
+    if (!currentUserQuery.data?.id || toggleLikeMutation.isPending) {
+      return;
+    }
+
+    try {
+      const result = await toggleLikeMutation.mutateAsync({
+        postId,
+        userId: currentUserQuery.data.id,
+      });
+
+      if (result.liked) {
+        success("좋아요를 눌렀어요.");
+        return;
+      }
+
+      success("좋아요를 취소했어요.");
+    } catch (toggleLikeError) {
+      console.error(toggleLikeError);
+      error("좋아요 처리에 실패했어요.");
+    }
+  };
+
+  const handleCreateComment = async () => {
+    if (!currentUserQuery.data?.id || !comment.trim()) {
+      return;
+    }
+
+    try {
+      await createCommentMutation.mutateAsync({
+        postId,
+        userId: currentUserQuery.data.id,
+        content: comment.trim(),
+      });
+      setComment("");
+      success("댓글이 등록되었어요.");
+    } catch (createCommentError) {
+      console.error(createCommentError);
+      error("댓글 등록에 실패했어요.");
+    }
+  };
+
   return (
     <main>
       <section className="px-6 py-4">
@@ -130,8 +192,49 @@ export default function CommunityDetailContent({
           commentCount={post.commentCount}
           showLabel
           className="px-6"
-          readOnly
+          isLiked={likeStatusQuery.data ?? false}
+          likeDisabled={
+            !currentUserQuery.data?.id ||
+            likeStatusQuery.isPending ||
+            toggleLikeMutation.isPending
+          }
+          onLikeClick={handleToggleLike}
+          onCommentClick={() => commentInputRef.current?.focus()}
         />
+      </section>
+
+      <section className="border-t border-gray-50 px-6 py-5">
+        <h3 className="title-md text-gray-400">댓글</h3>
+
+        {commentsQuery.isError ? (
+          <div className="py-8 text-center">
+            <p className="body-md text-gray-400">댓글을 불러오지 못했어요.</p>
+          </div>
+        ) : (
+          <CommentList items={commentsQuery.data ?? []} />
+        )}
+
+        <div className="mt-4 flex items-center rounded-lg bg-gray-50 px-4 py-3">
+          <input
+            ref={commentInputRef}
+            type="text"
+            value={comment}
+            onChange={(event) => setComment(event.target.value)}
+            placeholder="댓글을 입력하세요"
+            disabled={
+              !currentUserQuery.data?.id || createCommentMutation.isPending
+            }
+            className="flex-1 bg-transparent text-base text-gray-400 outline-none placeholder:text-gray-300 disabled:cursor-not-allowed"
+          />
+          <TextButton
+            size="md"
+            disabled={!comment.trim() || createCommentMutation.isPending}
+            onClick={handleCreateComment}
+            className="disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <FontAwesomeIcon icon={faPaperPlane} />
+          </TextButton>
+        </div>
       </section>
     </main>
   );

@@ -300,22 +300,15 @@ export async function createCommunityComment(params: {
   userId: string;
   content: string;
 }) {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("comment")
     .insert({
       post_id: params.postId,
       user_id: params.userId,
       content: params.content,
-    })
-    .select("id")
-    .maybeSingle();
+    });
 
   if (error) throw error;
-  if (!data) {
-    throw new Error("댓글 작성에 실패했어요.");
-  }
-
-  return data;
 }
 
 //좋아요상태
