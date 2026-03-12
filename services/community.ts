@@ -179,6 +179,7 @@ export async function getCommunityDetail(
   };
 }
 
+//추천게시글리스트
 export async function getRecommendedCommunityPosts(params: {
   postId: string;
   service: SubscriptableBrandType;

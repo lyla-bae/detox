@@ -9,12 +9,14 @@ type CommunityAuthGuardProps = {
   children: ReactNode;
 };
 
+//커뮤니티 진입 전 로그인 페이지로 보낼 경로 생성
 function getLoginRedirectUrl(pathname: string, search: string) {
   const currentUrl = search ? `${pathname}?${search}` : pathname;
 
   return `/login?redirect=${encodeURIComponent(currentUrl)}`;
 }
 
+//커뮤니티 로그인 가드
 export default function CommunityAuthGuard({
   children,
 }: CommunityAuthGuardProps) {

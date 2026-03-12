@@ -130,6 +130,8 @@ export default function CommunityDetailContent({
   const post = communityDetailQuery.data;
   const isAuthor = currentUserQuery.data?.id === post.userId;
   const recommendedPosts = recommendedPostsQuery.data ?? [];
+  const isLikeStatusResolved = likeStatusQuery.isSuccess;
+  const isLiked = isLikeStatusResolved ? likeStatusQuery.data : false;
 
   const handleEdit = () => {
     router.push(`/community/${postId}/edit`);
@@ -149,7 +151,11 @@ export default function CommunityDetailContent({
   };
 
   const handleToggleLike = async () => {
-    if (!currentUserQuery.data?.id || toggleLikeMutation.isPending) {
+    if (
+      !currentUserQuery.data?.id ||
+      !likeStatusQuery.isSuccess ||
+      toggleLikeMutation.isPending
+    ) {
       return;
     }
 
@@ -260,10 +266,11 @@ export default function CommunityDetailContent({
             commentCount={post.commentCount}
             showLabel
             className="px-6"
-            isLiked={likeStatusQuery.data ?? false}
+            isLiked={isLiked}
             likeDisabled={
               !currentUserQuery.data?.id ||
               likeStatusQuery.isPending ||
+              likeStatusQuery.isError ||
               toggleLikeMutation.isPending
             }
             onLikeClick={handleToggleLike}

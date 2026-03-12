@@ -1,13 +1,19 @@
 "use client";
 
 import {
+  type InfiniteData,
   useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
-import type { CommunityListCursor } from "@/app/community/_types";
+import type {
+  CommunityDetailData,
+  CommunityListCursor,
+  CommunityListItemData,
+  CommunityListPage,
+} from "@/app/community/_types";
 import type { SubscriptableBrandType } from "@/app/utils/brand/type";
 import {
   createCommunityComment,
@@ -49,6 +55,92 @@ export const communityKeys = {
     userId ?? "guest",
   ],
 } as const;
+
+//좋아요 낙관적 업데이트 롤백용
+type CommunityLikeMutationContext = {
+  previousDetail?: CommunityDetailData | null;
+  previousLikeStatus?: boolean;
+  previousLists: [
+    readonly unknown[],
+    InfiniteData<CommunityListPage, CommunityListCursor | null> | undefined,
+  ][];
+  previousRecommendations: [
+    readonly unknown[],
+    CommunityListItemData[] | undefined,
+  ][];
+};
+
+//좋아요 수 공통타입
+type CommunityLikeCountTarget = {
+  id: string;
+  likeCount: number;
+};
+
+//좋아요 업다운 계산
+function getNextLikeCount(currentCount: number, nextLiked: boolean) {
+  return nextLiked ? currentCount + 1 : Math.max(0, currentCount - 1);
+}
+
+//좋아요 수 반영
+function applyOptimisticLike<T extends CommunityLikeCountTarget>(
+  item: T,
+  postId: string,
+  nextLiked: boolean
+) {
+  if (item.id !== postId) {
+    return item;
+  }
+
+  return {
+    ...item,
+    likeCount: getNextLikeCount(item.likeCount, nextLiked),
+  };
+}
+
+//상세 db있을때 좋아요
+function applyOptimisticLikeToOptional<T extends CommunityLikeCountTarget>(
+  data: T | null | undefined,
+  postId: string,
+  nextLiked: boolean
+) {
+  if (!data) {
+    return data;
+  }
+
+  return applyOptimisticLike(data, postId, nextLiked);
+}
+
+//배열db에 좋아요
+function applyOptimisticLikeToItems<T extends CommunityLikeCountTarget>(
+  items: T[] | undefined,
+  postId: string,
+  nextLiked: boolean
+) {
+  if (!items) {
+    return items;
+  }
+
+  return items.map((item) => applyOptimisticLike(item, postId, nextLiked));
+}
+
+//무한스크롤에 좋아요
+function applyOptimisticLikeToInfiniteData(
+  data: InfiniteData<CommunityListPage, CommunityListCursor | null> | undefined,
+  postId: string,
+  nextLiked: boolean
+) {
+  if (!data) {
+    return data;
+  }
+
+  return {
+    ...data,
+    pages: data.pages.map((page) => ({
+      ...page,
+      items: applyOptimisticLikeToItems(page.items, postId, nextLiked),
+    })),
+  };
+}
 
 async function invalidateCommunityPost(
   queryClient: QueryClient,
@@ -114,6 +206,7 @@ export function useCommunityDetailQuery(postId: string) {
   });
 }
 
+//추천게시글조회
 export function useRecommendedCommunityPostsQuery(
   postId: string,
   service?: SubscriptableBrandType
@@ -204,13 +297,114 @@ export function useCreateCommunityCommentMutation() {
   });
 }
 
-//좋아요토글
+//좋아요토글(낙관적업데이트 포함)
 export function useToggleCommunityPostLikeMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: toggleCommunityPostLike,
-    onSuccess: async (_, variables) => {
+    onMutate: async (variables): Promise<CommunityLikeMutationContext> => {
+      const detailKey = communityKeys.detail(variables.postId);
+      const likeStatusKey = communityKeys.likeStatus(
+        variables.postId,
+        variables.userId
+      );
+
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: detailKey }),
+        queryClient.cancelQueries({ queryKey: likeStatusKey }),
+        queryClient.cancelQueries({ queryKey: communityKeys.lists() }),
+        queryClient.cancelQueries({
+          queryKey: communityKeys.recommendations(),
+        }),
+      ]);
+
+      const previousDetail =
+        queryClient.getQueryData<CommunityDetailData | null>(detailKey);
+      const previousLikeStatus =
+        queryClient.getQueryData<boolean>(likeStatusKey);
+      const previousLists = queryClient.getQueriesData<
+        InfiniteData<CommunityListPage, CommunityListCursor | null>
+      >({
+        queryKey: communityKeys.lists(),
+      });
+      const previousRecommendations = queryClient.getQueriesData<
+        CommunityListItemData[]
+      >({
+        queryKey: communityKeys.recommendations(),
+      });
+
+      if (typeof previousLikeStatus === "boolean") {
+        const nextLiked = !previousLikeStatus;
+
+        queryClient.setQueryData<boolean>(likeStatusKey, nextLiked);
+        queryClient.setQueryData<CommunityDetailData | null>(
+          detailKey,
+          (oldData) =>
+            applyOptimisticLikeToOptional(
+              oldData,
+              variables.postId,
+              nextLiked
+            ) ?? oldData
+        );
+        queryClient.setQueriesData<
+          InfiniteData<CommunityListPage, CommunityListCursor | null>
+        >(
+          {
+            queryKey: communityKeys.lists(),
+          },
+          (oldData) =>
+            applyOptimisticLikeToInfiniteData(
+              oldData,
+              variables.postId,
+              nextLiked
+            ) ?? oldData
+        );
+        queryClient.setQueriesData<CommunityListItemData[]>(
+          {
+            queryKey: communityKeys.recommendations(),
+          },
+          (oldData) =>
+            applyOptimisticLikeToItems(oldData, variables.postId, nextLiked) ??
+            oldData
+        );
+      }
+
+      return {
+        previousDetail,
+        previousLikeStatus,
+        previousLists,
+        previousRecommendations,
+      };
+    },
+    onError: (_error, variables, context) => {
+      if (!context) {
+        return;
+      }
+
+      const detailKey = communityKeys.detail(variables.postId);
+      const likeStatusKey = communityKeys.likeStatus(
+        variables.postId,
+        variables.userId
+      );
+
+      if (context.previousDetail !== undefined) {
+        queryClient.setQueryData(detailKey, context.previousDetail);
+      }
+
+      if (typeof context.previousLikeStatus === "boolean") {
+        queryClient.setQueryData(likeStatusKey, context.previousLikeStatus);
+      }
+
+      context.previousLists.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+
+      context.previousRecommendations.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
+    onSettled: async (_data, _error, variables) => {
       await invalidateCommunityPostLikes(
         queryClient,
         variables.postId,
