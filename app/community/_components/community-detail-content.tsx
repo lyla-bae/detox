@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Avatar from "@/app/components/avatar";
 import Button from "@/app/components/button";
 import TextButton from "@/app/components/text-button";
 import { useToast } from "@/app/hooks/useToast";
@@ -22,6 +21,7 @@ import {
 import CommentList from "./comment-list";
 import CommunityReactionStats from "./community-reaction-stats";
 import DetailKebab from "./detail-kebab";
+import AuthorMeta from "./author-meta";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { CommunityCommentItemData } from "../_types";
@@ -201,15 +201,11 @@ export default function CommunityDetailContent({
     <main>
       <section className="px-6 py-4">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Avatar size="sm" src={post.thumbUrl} alt={post.author} />
-            <div className="flex gap-3">
-              <div className="text-sm text-black font-bold leading-[110%]">
-                {post.author}
-              </div>
-              <span className="text-xs text-gray-300">{post.timeAgo}</span>
-            </div>
-          </div>
+          <AuthorMeta
+            thumbUrl={post.thumbUrl}
+            author={post.author}
+            timeAgo={post.timeAgo}
+          />
           <DetailKebab
             entityName="게시글"
             variant={isAuthor ? "edit" : "default"}

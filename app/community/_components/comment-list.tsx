@@ -1,7 +1,7 @@
 "use client";
 
-import Avatar from "@/app/components/avatar";
 import type { CommunityCommentItemData } from "../_types";
+import AuthorMeta from "./author-meta";
 import DetailKebab from "./detail-kebab";
 
 type CommentListProps = {
@@ -33,15 +33,11 @@ export default function CommentList({
           className="w-full grid grid-cols-1 items-center gap-1 bg-white rounded-lg"
         >
           <div className="flex items-center justify-between min-h-12">
-            <div className="flex items-center gap-2">
-              <Avatar size="sm" src={item.thumbUrl} alt={item.author} />
-              <div className="flex gap-3">
-                <div className="text-sm text-black font-bold leading-[110%]">
-                  {item.author}
-                </div>
-                <span className="text-xs text-gray-300">{item.timeAgo}</span>
-              </div>
-            </div>
+            <AuthorMeta
+              thumbUrl={item.thumbUrl}
+              author={item.author}
+              timeAgo={item.timeAgo}
+            />
             {currentUserId ? (
               <DetailKebab
                 entityName="댓글"
