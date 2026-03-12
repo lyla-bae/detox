@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import {
   faChartSimple,
   faCircleUser,
@@ -31,14 +32,21 @@ export default function BottomNav() {
     <>
       <div aria-hidden="true" className={BOTTOM_NAV_HEIGHT_CLASS} />
       <nav
-        className={`fixed bottom-0 left-0 z-10 flex w-full items-center justify-around rounded-t-lg bg-white shadow-xl ${BOTTOM_NAV_HEIGHT_CLASS} ${BOTTOM_NAV_SAFE_AREA_CLASS}`}
+        className={cn(
+          "fixed bottom-0 left-0 z-10 flex w-full items-center justify-around rounded-t-lg bg-white shadow-xl",
+          BOTTOM_NAV_HEIGHT_CLASS,
+          BOTTOM_NAV_SAFE_AREA_CLASS
+        )}
         aria-label="하단 네비게이션"
       >
         {NAV_ITEMS.map(({ href, icon, label }) => (
           <Link
             key={href}
             href={href}
-            className={`flex flex-col items-center justify-around gap-1 ${isActive(href) ? "text-blue-400" : "text-gray-300"}`}
+            className={cn(
+              "flex flex-col items-center justify-around gap-1",
+              isActive(href) ? "text-blue-400" : "text-gray-300"
+            )}
             aria-current={isActive(href) ? "page" : undefined}
           >
             <FontAwesomeIcon size="lg" icon={icon} />
