@@ -14,13 +14,26 @@ import {
 import { useAnonymousLoginMutation, useCurrentUserQuery } from "@/query/users";
 import { useToast } from "../hooks/useToast";
 
+//로그인 후 이동 경로 검증
+function getSafeRedirectPath(redirectPath: string | null) {
+  if (
+    !redirectPath ||
+    !redirectPath.startsWith("/") ||
+    redirectPath.startsWith("//") ||
+    redirectPath.includes("\\")
+  ) {
+    return "/";
+  }
+
+  return redirectPath;
+}
+
 export default function Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { error } = useToast();
   const redirectPath = searchParams.get("redirect");
-  const nextPath =
-    redirectPath && redirectPath.startsWith("/") ? redirectPath : "/";
+  const nextPath = getSafeRedirectPath(redirectPath);
 
   const { mutateAsync: anonymousLogin, isPending: isAnonymousLoginPending } =
     useAnonymousLoginMutation();
