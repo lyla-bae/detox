@@ -9,8 +9,9 @@ import Button from "@/app/components/button";
 import type { CommunityServiceValue } from "../_types";
 import { useCurrentUserQuery } from "@/query/users";
 import { useCreateCommunityPostMutation } from "@/query/community";
+import CommunityAuthGuard from "../_components/community-auth-guard";
 
-export default function CommunityNewPage() {
+function CommunityNewPageContent() {
   const router = useRouter();
 
   const [selectedService, setSelectedService] =
@@ -75,5 +76,13 @@ export default function CommunityNewPage() {
         </Button>
       </div>
     </>
+  );
+}
+
+export default function CommunityNewPage() {
+  return (
+    <CommunityAuthGuard>
+      <CommunityNewPageContent />
+    </CommunityAuthGuard>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import Button from "../components/button";
 import LoadingScreen from "../components/loading-screen";
@@ -16,7 +16,11 @@ import { useToast } from "../hooks/useToast";
 
 export default function Page() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { error } = useToast();
+  const redirectPath = searchParams.get("redirect");
+  const nextPath =
+    redirectPath && redirectPath.startsWith("/") ? redirectPath : "/";
 
   const { mutateAsync: anonymousLogin, isPending: isAnonymousLoginPending } =
     useAnonymousLoginMutation();
@@ -26,14 +30,14 @@ export default function Page() {
 
   useEffect(() => {
     if (currentUser) {
-      router.replace("/");
+      router.replace(nextPath);
     }
-  }, [currentUser, router]);
+  }, [currentUser, nextPath, router]);
 
   const handleAnonymousLogin = async () => {
     try {
       await anonymousLogin();
-      router.push("/");
+      router.replace(nextPath);
     } catch (loginError) {
       console.error(loginError);
       error("로그인에 실패했어요.");

@@ -13,6 +13,7 @@ import {
   useUpdateCommunityPostMutation,
 } from "@/query/community";
 import { useState } from "react";
+import CommunityAuthGuard from "../../_components/community-auth-guard";
 
 type CommunityEditFormContentProps = {
   postId: string;
@@ -82,7 +83,7 @@ function CommunityEditFormContent({
   );
 }
 
-export default function CommunityEditPage() {
+function CommunityEditPageContent() {
   const { id } = useParams<{ id: string }>();
   const currentUserQuery = useCurrentUserQuery();
   const communityDetailQuery = useCommunityDetailQuery(id);
@@ -145,5 +146,13 @@ export default function CommunityEditPage() {
         initialPost={communityDetailQuery.data}
       />
     </>
+  );
+}
+
+export default function CommunityEditPage() {
+  return (
+    <CommunityAuthGuard>
+      <CommunityEditPageContent />
+    </CommunityAuthGuard>
   );
 }
