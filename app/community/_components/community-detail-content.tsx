@@ -1,10 +1,16 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Avatar from "@/app/components/avatar";
 import Button from "@/app/components/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCommunityDetailQuery } from "@/query/community";
+import { useCurrentUserQuery } from "@/query/users";
+import {
+  useCommunityDetailQuery,
+  useDeleteCommunityPostMutation,
+} from "@/query/community";
 import CommunityReactionStats from "./community-reaction-stats";
+import DetailKebab from "./detail-kebab";
 
 type CommunityDetailContentProps = {
   postId: string;
@@ -13,14 +19,20 @@ type CommunityDetailContentProps = {
 export default function CommunityDetailContent({
   postId,
 }: CommunityDetailContentProps) {
+  const router = useRouter();
+  const currentUserQuery = useCurrentUserQuery();
   const communityDetailQuery = useCommunityDetailQuery(postId);
+  const deleteCommunityPostMutation = useDeleteCommunityPostMutation();
 
   if (communityDetailQuery.isPending) {
     return (
       <main className="px-6 py-4">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-8 rounded-full" />
-          <Skeleton className="h-4 w-24" />
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <Skeleton className="h-10 w-10 rounded-full" />
         </div>
 
         <div className="mt-4 space-y-3">
@@ -63,18 +75,43 @@ export default function CommunityDetailContent({
   }
 
   const post = communityDetailQuery.data;
+  const isAuthor = currentUserQuery.data?.id === post.userId;
+
+  const handleEdit = () => {
+    router.push(`/community/${postId}/edit`);
+  };
+
+  const handleDelete = async () => {
+    if (!currentUserQuery.data?.id || deleteCommunityPostMutation.isPending) {
+      return;
+    }
+
+    await deleteCommunityPostMutation.mutateAsync({
+      postId,
+      userId: currentUserQuery.data.id,
+    });
+
+    router.push("/community");
+  };
 
   return (
     <main>
       <section className="px-6 py-4">
-        <div className="flex items-center gap-2">
-          <Avatar size="sm" src={post.thumbUrl} alt={post.author} />
-          <div className="flex gap-3">
-            <div className="text-sm text-black font-bold leading-[110%]">
-              {post.author}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Avatar size="sm" src={post.thumbUrl} alt={post.author} />
+            <div className="flex gap-3">
+              <div className="text-sm text-black font-bold leading-[110%]">
+                {post.author}
+              </div>
+              <span className="text-xs text-gray-300">{post.timeAgo}</span>
             </div>
-            <span className="text-xs text-gray-300">{post.timeAgo}</span>
           </div>
+          <DetailKebab
+            variant={isAuthor ? "edit" : "default"}
+            onEdit={isAuthor ? handleEdit : undefined}
+            onDelete={isAuthor ? handleDelete : undefined}
+          />
         </div>
 
         <div className="mt-4 text-sm text-gray-300">

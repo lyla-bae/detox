@@ -18,7 +18,11 @@ export default function DetailKebab({
   onDelete,
 }: DetailKebabProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { success, warning } = useToast();
+  const {
+    success,
+    warning,
+    error: errorToast,
+  } = useToast();
 
   const deleteAlert: AlertItem = {
     id: "delete-post-alert",
@@ -27,8 +31,16 @@ export default function DetailKebab({
     confirmText: "삭제",
     cancelText: "취소",
     variant: "danger",
-    onConfirm: () => {
-      success("게시글이 삭제되었습니다.");
+    onConfirm: async () => {
+      if (!onDelete) return;
+
+      try {
+        await onDelete();
+        success("게시글이 삭제되었습니다.");
+      } catch (error) {
+        console.error(error);
+        errorToast("게시글 삭제에 실패했어요.");
+      }
     },
   };
 
@@ -36,9 +48,17 @@ export default function DetailKebab({
     <>
       <KebabMenu
         variant={variant}
-        onEdit={variant === "edit" ? () => {} : undefined}
-        onDelete={() => setIsDeleteDialogOpen(true)}
-        onReport={() => warning("게시글이 신고되었습니다.")}
+        onEdit={variant === "edit" ? onEdit : undefined}
+        onDelete={
+          variant === "edit" && onDelete
+            ? () => setIsDeleteDialogOpen(true)
+            : undefined
+        }
+        onReport={
+          variant === "default"
+            ? () => warning("게시글이 신고되었습니다.")
+            : undefined
+        }
       />
       <AlertDialogComponent
         alert={deleteAlert}
