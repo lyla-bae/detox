@@ -16,7 +16,7 @@ import { useToast } from "../hooks/useToast";
 
 export default function Page() {
   const router = useRouter();
-  const { errorToast } = useToast();
+  const { error } = useToast();
 
   const { mutateAsync: anonymousLogin, isPending: isAnonymousLoginPending } =
     useAnonymousLoginMutation();
@@ -34,9 +34,9 @@ export default function Page() {
     try {
       await anonymousLogin();
       router.push("/");
-    } catch (error) {
-      console.error(error);
-      errorToast("로그인에 실패했어요.");
+    } catch (loginError) {
+      console.error(loginError);
+      error("로그인에 실패했어요.");
     }
   };
 
