@@ -31,14 +31,14 @@ export default function CommunityNewPage() {
     if (selectedService === "all") return;
 
     try {
-      await createCommunityPostMutation.mutateAsync({
+      const createdPost = await createCommunityPostMutation.mutateAsync({
         userId: currentUserQuery.data.id,
         service: selectedService,
         title: title.trim(),
         content: content.trim(),
       });
 
-      router.push("/community");
+      router.push(`/community/${createdPost.id}`);
     } catch (error) {
       console.error(error);
     }

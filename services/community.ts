@@ -184,12 +184,21 @@ export async function createCommunityPost(params: {
   title: string;
   content: string;
 }) {
-  return supabase.from("post").insert({
-    user_id: params.userId,
-    service: params.service,
-    title: params.title,
-    content: params.content,
-  });
+  const { data, error } = await supabase
+    .from("post")
+    .insert({
+      user_id: params.userId,
+      service: params.service,
+      title: params.title,
+      content: params.content,
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("게시글 작성에 실패했어요.");
+
+  return data;
 }
 //게시글수정
 export async function updateCommunityPost(params: {
