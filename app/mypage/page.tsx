@@ -8,16 +8,21 @@ import Input from "../components/input";
 import Button from "../components/button";
 import BottomNav from "../components/bottom-nav";
 import LoadingScreen from "../components/loading-screen";
+import TextButton from "../components/text-button";
 import { useRouter } from "next/navigation";
-import { useCurrentUserQuery, useLogoutMutation } from "@/query/users";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleExclamation } from "@fortawesome/free-solid-svg-icons";
-import { toast } from "sonner";
+import {
+  useCurrentUserQuery,
+  useLogoutMutation,
+  useUserProfileQuery,
+} from "@/query/users";
+import { useToast } from "../hooks/useToast";
 
 export default function Page() {
   const router = useRouter();
+  const { errorToast } = useToast();
   const logoutMutation = useLogoutMutation();
   const currentUserQuery = useCurrentUserQuery();
+  const userProfileQuery = useUserProfileQuery(currentUserQuery.data?.id);
 
   useEffect(() => {
     if (!currentUserQuery.isPending && !currentUserQuery.data) {
@@ -31,25 +36,23 @@ export default function Page() {
       router.push("/login");
     } catch (error) {
       console.error(error);
-      toast(
-        <span className="body-md inline-flex items-center gap-2">
-          <FontAwesomeIcon
-            icon={faCircleExclamation}
-            className="h-4 w-4 text-gray-400"
-          />
-          로그아웃에 실패했어요.
-        </span>,
-        {
-          className: "!justify-center",
-          style: { textAlign: "center" },
-        }
-      );
+      errorToast("로그아웃에 실패했어요.");
     }
   };
 
-  if (currentUserQuery.isPending || !currentUserQuery.data) {
+  if (
+    currentUserQuery.isPending ||
+    !currentUserQuery.data ||
+    userProfileQuery.isPending
+  ) {
     return <LoadingScreen message="내 정보를 불러오는 중이에요." />;
   }
+
+  const nickname = userProfileQuery.data?.nickname ?? "사용자";
+  const email =
+    userProfileQuery.data?.email ??
+    currentUserQuery.data.email ??
+    "이메일 정보가 없어요.";
 
   return (
     <main className="w-full min-h-screen flex flex-col items-center relative">
@@ -57,13 +60,14 @@ export default function Page() {
         variant="text"
         leftText="내 정보"
         rightContent={
-          <button
-            className="flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          <TextButton
+            size="md"
+            className="flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={logoutMutation.isPending}
             onClick={handleLogout}
           >
-            <span className="body-lg font-normal text-gray-300">로그아웃</span>
-          </button>
+            로그아웃
+          </TextButton>
         }
       />
 
@@ -81,15 +85,17 @@ export default function Page() {
             </button>
           </div>
           <div className="flex flex-col gap-1 items-center">
-            <span className="body-lg font-bold">김철수</span>
-            <span className="body-md font-normal text-gray-300">
-              kim@gmail.com
-            </span>
+            <span className="body-lg font-bold">{nickname}</span>
+            <span className="body-md font-normal text-gray-300">{email}</span>
           </div>
         </div>
 
         <div className="flex flex-col gap-4 items-center">
-          <Input label="닉네임" placeholder="닉네임을 입력해주세요" />
+          <Input
+            label="닉네임"
+            placeholder="닉네임을 입력해주세요"
+            defaultValue={userProfileQuery.data?.nickname ?? ""}
+          />
           <Button variant="primary" size="lg">
             저장하기
           </Button>
@@ -97,11 +103,13 @@ export default function Page() {
       </div>
 
       {!currentUserQuery.data?.is_anonymous ? (
-        <button className="absolute left-1/2 -translate-x-1/2 bottom-[108px] w-auto flex items-center justify-center gap-2 cursor-pointer">
-          <span className="body-lg font-normal text-gray-300 underline">
-            탈퇴하기
-          </span>
-        </button>
+        <TextButton
+          size="md"
+          underline
+          className="absolute left-1/2 -translate-x-1/2 bottom-[108px] w-auto flex items-center justify-center gap-2"
+        >
+          탈퇴하기
+        </TextButton>
       ) : null}
 
       <BottomNav />

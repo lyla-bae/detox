@@ -4,15 +4,39 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { generateNickname } from "@/app/utils/nickname";
 import {
   getCurrentUser,
+  getUserProfile,
   signInAnonymously,
   signOut,
   upsertUser,
 } from "@/services/users";
 
+const NICKNAME_MAX_RETRY_COUNT = 5;
+function isNicknameConflictError(error: {
+  code?: string | null;
+  message?: string | null;
+  details?: string | null;
+  hint?: string | null;
+}) {
+  // Supabase/Postgres가 내려주는 에러 문자열 안에서 unique 제약과 nickname 컬럼명을 함께 확인합니다.
+  const errorMessage = [
+    error.message ?? "",
+    error.details ?? "",
+    error.hint ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  const isUniqueViolation =
+    error.code === "23505" || errorMessage.includes("duplicate key");
+
+  return isUniqueViolation && errorMessage.includes("nickname");
+}
+
 export const usersKeys = {
   all: ["users"],
   auth: () => [...usersKeys.all, "auth"],
   profile: () => [...usersKeys.all, "profile"],
+  profileById: (userId: string) => [...usersKeys.profile(), userId],
 } as const;
 
 export function useAnonymousLoginMutation() {
@@ -27,16 +51,38 @@ export function useAnonymousLoginMutation() {
       }
 
       const user = data.user;
-
-      const { error: upsertError } = await upsertUser({
+      const userPayload = {
         id: user.id,
         provider: "anonymous",
         provider_id: user.id,
         email: user.email,
-        nickname: generateNickname(),
         profile_image: null,
         is_anonymous: true,
-      });
+      };
+
+      let upsertError: Awaited<ReturnType<typeof upsertUser>>["error"] = null;
+
+      for (
+        let retryCount = 0;
+        retryCount < NICKNAME_MAX_RETRY_COUNT;
+        retryCount++
+      ) {
+        const { error } = await upsertUser({
+          ...userPayload,
+          nickname: generateNickname(),
+        });
+
+        if (!error) {
+          return user;
+        }
+
+        upsertError = error;
+
+        // 닉네임 UNIQUE 충돌일 때만 새 후보를 뽑아 다시 시도합니다.
+        if (!isNicknameConflictError(error)) {
+          break;
+        }
+      }
 
       if (upsertError) {
         const { error: signOutError } = await signOut();
@@ -48,7 +94,7 @@ export function useAnonymousLoginMutation() {
         throw upsertError;
       }
 
-      return user;
+      throw new Error("사용자 정보 저장에 실패했어요.");
     },
     onSuccess: (user) => {
       queryClient.setQueryData([...usersKeys.auth(), "current-user"], user);
@@ -73,6 +119,9 @@ export function useLogoutMutation() {
       queryClient.removeQueries({
         queryKey: [...usersKeys.auth(), "current-user"],
       });
+      queryClient.removeQueries({
+        queryKey: usersKeys.profile(),
+      });
     },
   });
 }
@@ -89,5 +138,25 @@ export function useCurrentUserQuery() {
 
       return data.user;
     },
+  });
+}
+
+export function useUserProfileQuery(userId?: string) {
+  return useQuery({
+    queryKey: usersKeys.profileById(userId ?? ""),
+    queryFn: async () => {
+      if (!userId) {
+        return null;
+      }
+
+      const { data, error } = await getUserProfile(userId);
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    },
+    enabled: Boolean(userId),
   });
 }
