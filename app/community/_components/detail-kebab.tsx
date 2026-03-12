@@ -8,25 +8,25 @@ import type { AlertItem } from "@/store/useAlertStore";
 
 interface DetailKebabProps {
   variant?: "default" | "edit";
+  entityName?: string;
   onEdit?: () => void;
   onDelete?: () => Promise<void> | void;
+  onReport?: () => Promise<void> | void;
 }
 
 export default function DetailKebab({
   variant = "default",
+  entityName = "게시글",
   onEdit,
   onDelete,
+  onReport,
 }: DetailKebabProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const {
-    success,
-    warning,
-    error: errorToast,
-  } = useToast();
+  const { success, warning, error: errorToast } = useToast();
 
   const deleteAlert: AlertItem = {
-    id: "delete-post-alert",
-    title: "게시글을 삭제할까요?",
+    id: `delete-${entityName}-alert`,
+    title: `${entityName}을 삭제할까요?`,
     description: "삭제 후에는 되돌릴 수 없습니다.",
     confirmText: "삭제",
     cancelText: "취소",
@@ -36,13 +36,32 @@ export default function DetailKebab({
 
       try {
         await onDelete();
-        success("게시글이 삭제되었습니다.");
+        success(`${entityName}이 삭제되었습니다.`);
       } catch (error) {
         console.error(error);
-        errorToast("게시글 삭제에 실패했어요.");
+        errorToast(`${entityName} 삭제에 실패했어요.`);
       }
     },
   };
+  const handleReport = async () => {
+    if (!onReport) return;
+
+    try {
+      await onReport();
+      warning(`${entityName}이 신고되었습니다.`);
+    } catch (error) {
+      console.error(error);
+      errorToast(`${entityName} 신고에 실패했어요.`);
+    }
+  };
+
+  const hasMenuAction =
+    (variant === "edit" && Boolean(onEdit || onDelete)) ||
+    (variant === "default" && Boolean(onReport));
+
+  if (!hasMenuAction) {
+    return null;
+  }
 
   return (
     <>
@@ -54,11 +73,7 @@ export default function DetailKebab({
             ? () => setIsDeleteDialogOpen(true)
             : undefined
         }
-        onReport={
-          variant === "default"
-            ? () => warning("게시글이 신고되었습니다.")
-            : undefined
-        }
+        onReport={variant === "default" ? handleReport : undefined}
       />
       <AlertDialogComponent
         alert={deleteAlert}

@@ -11,11 +11,14 @@ import type { SubscriptableBrandType } from "@/app/utils/brand/type";
 import {
   createCommunityComment,
   createCommunityPost,
+  deleteCommunityComment,
   deleteCommunityPost,
   getCommunityComments,
   getCommunityDetail,
   getCommunityListPage,
   getCommunityPostLikeStatus,
+  reportCommunityComment,
+  reportCommunityPost,
   toggleCommunityPostLike,
   updateCommunityPost,
 } from "@/services/community";
@@ -39,6 +42,7 @@ export const communityKeys = {
   ],
 } as const;
 
+//리스트
 export function useInfiniteCommunityListQuery(
   service?: SubscriptableBrandType
 ) {
@@ -54,6 +58,7 @@ export function useInfiniteCommunityListQuery(
   });
 }
 
+//상세
 export function useCommunityDetailQuery(postId: string) {
   return useQuery({
     queryKey: communityKeys.detail(postId),
@@ -62,6 +67,7 @@ export function useCommunityDetailQuery(postId: string) {
   });
 }
 
+//작성
 export function useCreateCommunityPostMutation() {
   const queryClient = useQueryClient();
 
@@ -75,6 +81,7 @@ export function useCreateCommunityPostMutation() {
   });
 }
 
+//수정
 export function useUpdateCommunityPostMutation() {
   const queryClient = useQueryClient();
 
@@ -91,6 +98,7 @@ export function useUpdateCommunityPostMutation() {
   });
 }
 
+//삭제
 export function useDeleteCommunityPostMutation() {
   const queryClient = useQueryClient();
 
@@ -107,6 +115,7 @@ export function useDeleteCommunityPostMutation() {
   });
 }
 
+//댓글조회
 export function useCommunityCommentsQuery(postId: string) {
   return useQuery({
     queryKey: communityKeys.commentList(postId),
@@ -115,6 +124,7 @@ export function useCommunityCommentsQuery(postId: string) {
   });
 }
 
+//좋아요조회
 export function useCommunityPostLikeStatusQuery(
   postId: string,
   userId?: string
@@ -130,6 +140,7 @@ export function useCommunityPostLikeStatusQuery(
   });
 }
 
+//댓글작성
 export function useCreateCommunityCommentMutation() {
   const queryClient = useQueryClient();
 
@@ -149,6 +160,7 @@ export function useCreateCommunityCommentMutation() {
   });
 }
 
+//좋아요토글
 export function useToggleCommunityPostLikeMutation() {
   const queryClient = useQueryClient();
 
@@ -165,5 +177,39 @@ export function useToggleCommunityPostLikeMutation() {
         queryKey: communityKeys.likeStatus(variables.postId, variables.userId),
       });
     },
+  });
+}
+
+//댓글삭제
+export function useDeleteCommunityCommentMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteCommunityComment,
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: communityKeys.lists(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: communityKeys.detail(variables.postId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: communityKeys.commentList(variables.postId),
+      });
+    },
+  });
+}
+
+//게시글신고
+export function useReportCommunityPostMutation() {
+  return useMutation({
+    mutationFn: reportCommunityPost,
+  });
+}
+
+//댓글신고
+export function useReportCommunityCommentMutation() {
+  return useMutation({
+    mutationFn: reportCommunityComment,
   });
 }

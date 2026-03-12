@@ -11,7 +11,7 @@ import type { Tables } from "@/types/supabase.types";
 
 type UserRow = Tables<"users">;
 
-//리스트
+//게시글리스트
 export async function getCommunityListPage(params: {
   service?: SubscriptableBrandType;
   cursor?: CommunityListCursor | null;
@@ -121,7 +121,7 @@ export async function getCommunityListPage(params: {
   };
 }
 
-//상세
+//게시글상세
 export async function getCommunityDetail(
   postId: string
 ): Promise<CommunityDetailData | null> {
@@ -177,7 +177,7 @@ export async function getCommunityDetail(
     createdAt: post.created_at,
   };
 }
-//작성
+//게시글작성
 export async function createCommunityPost(params: {
   userId: string;
   service: SubscriptableBrandType;
@@ -191,7 +191,7 @@ export async function createCommunityPost(params: {
     content: params.content,
   });
 }
-//수정
+//게시글수정
 export async function updateCommunityPost(params: {
   postId: string;
   userId: string;
@@ -220,7 +220,7 @@ export async function updateCommunityPost(params: {
   return data;
 }
 
-//삭제
+//게시글삭제
 export async function deleteCommunityPost(params: {
   postId: string;
   userId: string;
@@ -239,6 +239,28 @@ export async function deleteCommunityPost(params: {
   if (error) throw error;
   if (!data) {
     throw new Error("삭제할 게시글이 없거나 권한이 없습니다.");
+  }
+
+  return data;
+}
+
+//게시글신고
+export async function reportCommunityPost(params: {
+  postId: string;
+  reporterUserId: string;
+}) {
+  const { data, error } = await supabase
+    .from("report")
+    .insert({
+      post_id: params.postId,
+      reporter_user_id: params.reporterUserId,
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("게시글 신고에 실패했어요.");
   }
 
   return data;
@@ -300,15 +322,59 @@ export async function createCommunityComment(params: {
   userId: string;
   content: string;
 }) {
-  const { error } = await supabase
-    .from("comment")
-    .insert({
-      post_id: params.postId,
-      user_id: params.userId,
-      content: params.content,
-    });
+  const { error } = await supabase.from("comment").insert({
+    post_id: params.postId,
+    user_id: params.userId,
+    content: params.content,
+  });
 
   if (error) throw error;
+}
+
+//댓글삭제
+export async function deleteCommunityComment(params: {
+  commentId: string;
+  postId: string;
+  userId: string;
+}) {
+  const { data, error } = await supabase
+    .from("comment")
+    .update({
+      deleted_at: new Date().toISOString(),
+    })
+    .eq("id", params.commentId)
+    .eq("user_id", params.userId)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("삭제할 댓글이 없거나 권한이 없습니다.");
+  }
+
+  return data;
+}
+//댓글신고
+export async function reportCommunityComment(params: {
+  commentId: string;
+  reporterUserId: string;
+}) {
+  const { data, error } = await supabase
+    .from("report")
+    .insert({
+      comment_id: params.commentId,
+      reporter_user_id: params.reporterUserId,
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw new Error("댓글 신고에 실패했어요.");
+  }
+
+  return data;
 }
 
 //좋아요상태
