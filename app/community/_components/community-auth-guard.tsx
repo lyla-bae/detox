@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import FeedbackPage from "@/app/components/feedback-page";
 import LoadingScreen from "@/app/components/loading-screen";
 import { useCurrentUserQuery } from "@/query/users";
 
@@ -28,22 +29,37 @@ export default function CommunityAuthGuard({
     pathname,
     searchParams.toString()
   );
+  const isUnauthenticated =
+    currentUserQuery.isSuccess && !currentUserQuery.data;
 
   useEffect(() => {
-    if (currentUserQuery.isPending || currentUserQuery.data) {
+    if (!isUnauthenticated) {
       return;
     }
 
     router.replace(loginRedirectUrl);
-  }, [
-    currentUserQuery.data,
-    currentUserQuery.isPending,
-    loginRedirectUrl,
-    router,
-  ]);
+  }, [isUnauthenticated, loginRedirectUrl, router]);
 
   if (currentUserQuery.isPending) {
     return <LoadingScreen message="로그인 정보를 확인하고 있어요." />;
+  }
+
+  if (currentUserQuery.isError) {
+    return (
+      <FeedbackPage
+        title="로그인 상태를 확인할 수 없어요."
+        description="죄송하지만 나중에 다시 시도해주세요."
+        buttonLabel="이전 화면으로 가기"
+        onButtonClick={() => {
+          if (window.history.length > 1) {
+            router.back();
+            return;
+          }
+
+          router.replace("/");
+        }}
+      />
+    );
   }
 
   if (!currentUserQuery.data) {

@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Button from "@/app/components/button";
 import FeedbackState from "@/app/components/feedback-state";
+import FeedbackPage from "@/app/components/feedback-page";
 import Header from "@/app/components/header";
 import TextButton from "@/app/components/text-button";
 import { useToast } from "@/app/hooks/useToast";
@@ -82,36 +82,6 @@ export default function CommunityDetailContent({
     </section>
   );
 
-  const renderDetailFeedbackPage = ({
-    title,
-    description,
-    buttonLabel,
-    onButtonClick,
-  }: {
-    title: string;
-    description: string;
-    buttonLabel: string;
-    onButtonClick: () => void;
-  }) => (
-    <main className="mx-auto min-h-screen flex flex-col items-center justify-center px-6">
-      <FeedbackState
-        title={title}
-        description={description}
-        imageSrc="/images/emoji/error.png"
-        bottomCTA
-      >
-        <Button
-          variant="primary"
-          size="md"
-          className="w-full"
-          onClick={onButtonClick}
-        >
-          {buttonLabel}
-        </Button>
-      </FeedbackState>
-    </main>
-  );
-
   if (communityDetailQuery.isPending) {
     return (
       <>
@@ -155,21 +125,25 @@ export default function CommunityDetailContent({
   }
 
   if (communityDetailQuery.isError) {
-    return renderDetailFeedbackPage({
-      title: "게시글을 불러오지 못했어요.",
-      description: "죄송하지만 나중에 다시 시도해주세요.",
-      buttonLabel: "커뮤니티 홈으로 가기",
-      onButtonClick: () => router.replace("/community"),
-    });
+    return (
+      <FeedbackPage
+        title="게시글을 불러오지 못했어요."
+        description="죄송하지만 나중에 다시 시도해주세요."
+        buttonLabel="커뮤니티 홈으로 가기"
+        onButtonClick={() => router.replace("/community")}
+      />
+    );
   }
 
   if (!communityDetailQuery.data) {
-    return renderDetailFeedbackPage({
-      title: "페이지를 불러올 수 없어요",
-      description: "삭제되었거나 없는 게시글입니다.",
-      buttonLabel: "커뮤니티로 가기",
-      onButtonClick: () => router.replace("/community"),
-    });
+    return (
+      <FeedbackPage
+        title="페이지를 불러올 수 없어요"
+        description="삭제되었거나 없는 게시글입니다."
+        buttonLabel="커뮤니티로 가기"
+        onButtonClick={() => router.replace("/community")}
+      />
+    );
   }
 
   const post = communityDetailQuery.data;
