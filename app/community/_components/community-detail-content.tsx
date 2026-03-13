@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { getLoginRedirectUrl } from "@/app/utils/auth/get-login-redirect-url";
+
 import FeedbackState from "@/app/components/feedback-state";
 import FeedbackPage from "@/app/components/feedback-page";
 import Header from "@/app/components/header";
@@ -59,6 +61,19 @@ export default function CommunityDetailContent({
   const reportCommunityCommentMutation = useReportCommunityCommentMutation();
   const toggleLikeMutation = useToggleCommunityPostLikeMutation();
   const reportCommunityPostMutation = useReportCommunityPostMutation();
+
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const isLoggedIn = Boolean(currentUserQuery.data?.id);
+  const currentPath = searchParams.toString()
+    ? `${pathname}?${searchParams.toString()}`
+    : pathname;
+  const loginRedirectUrl = getLoginRedirectUrl(currentPath);
+
+  const moveToLogin = () => {
+    router.push(loginRedirectUrl);
+  };
 
   const renderCommentsLoading = () => (
     <div className="grid grid-cols-1 gap-5 py-5">
@@ -170,18 +185,19 @@ export default function CommunityDetailContent({
   };
 
   const handleToggleLike = async () => {
-    if (
-      !currentUserQuery.data?.id ||
-      !likeStatusQuery.isSuccess ||
-      toggleLikeMutation.isPending
-    ) {
+    if (!isLoggedIn) {
+      moveToLogin();
+      return;
+    }
+
+    if (!likeStatusQuery.isSuccess || toggleLikeMutation.isPending) {
       return;
     }
 
     try {
       const result = await toggleLikeMutation.mutateAsync({
         postId,
-        userId: currentUserQuery.data.id,
+        userId: currentUserQuery.data!.id,
       });
 
       if (result.liked) {
@@ -197,18 +213,19 @@ export default function CommunityDetailContent({
   };
 
   const handleCreateComment = async () => {
-    if (
-      !currentUserQuery.data?.id ||
-      !comment.trim() ||
-      createCommentMutation.isPending
-    ) {
+    if (!isLoggedIn) {
+      moveToLogin();
+      return;
+    }
+
+    if (!comment.trim() || createCommentMutation.isPending) {
       return;
     }
 
     try {
       await createCommentMutation.mutateAsync({
         postId,
-        userId: currentUserQuery.data.id,
+        userId: currentUserQuery.data!.id,
         content: comment.trim(),
       });
       setComment("");
@@ -220,13 +237,14 @@ export default function CommunityDetailContent({
   };
 
   const handleReport = async () => {
-    if (!currentUserQuery.data?.id) {
-      throw new Error("신고하려면 로그인이 필요해요.");
+    if (!isLoggedIn) {
+      moveToLogin();
+      return;
     }
 
     await reportCommunityPostMutation.mutateAsync({
       postId,
-      reporterUserId: currentUserQuery.data.id,
+      reporterUserId: currentUserQuery.data!.id,
     });
   };
 
@@ -243,13 +261,14 @@ export default function CommunityDetailContent({
   };
 
   const handleReportComment = async (commentItem: CommunityCommentItemData) => {
-    if (!currentUserQuery.data?.id) {
-      throw new Error("댓글을 신고하려면 로그인이 필요해요.");
+    if (!isLoggedIn) {
+      moveToLogin();
+      return;
     }
 
     await reportCommunityCommentMutation.mutateAsync({
       commentId: commentItem.id,
-      reporterUserId: currentUserQuery.data.id,
+      reporterUserId: currentUserQuery.data!.id,
     });
   };
 
@@ -291,10 +310,9 @@ export default function CommunityDetailContent({
             className="px-6"
             isLiked={isLiked}
             likeDisabled={
-              !currentUserQuery.data?.id ||
-              likeStatusQuery.isPending ||
-              likeStatusQuery.isError ||
-              toggleLikeMutation.isPending
+              toggleLikeMutation.isPending ||
+              (isLoggedIn &&
+                (likeStatusQuery.isPending || likeStatusQuery.isError))
             }
             onLikeClick={handleToggleLike}
             onCommentClick={() => commentInputRef.current?.focus()}
@@ -328,16 +346,37 @@ export default function CommunityDetailContent({
               ref={commentInputRef}
               type="text"
               value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              placeholder="댓글을 입력하세요"
-              disabled={
-                !currentUserQuery.data?.id || createCommentMutation.isPending
+              onChange={(event) => {
+                if (!isLoggedIn) {
+                  return;
+                }
+
+                setComment(event.target.value);
+              }}
+              onFocus={() => {
+                if (!isLoggedIn) {
+                  moveToLogin();
+                }
+              }}
+              onClick={() => {
+                if (!isLoggedIn) {
+                  moveToLogin();
+                }
+              }}
+              placeholder={
+                isLoggedIn
+                  ? "댓글을 입력하세요"
+                  : "댓글 작성은 로그인 후 가능해요"
               }
-              className="flex-1 bg-transparent text-base text-gray-400 outline-none placeholder:text-gray-300 disabled:cursor-not-allowed"
+              readOnly={!isLoggedIn || createCommentMutation.isPending}
+              className="flex-1 bg-transparent text-base text-gray-400 outline-none placeholder:text-gray-300"
             />
             <TextButton
               size="md"
-              disabled={!comment.trim() || createCommentMutation.isPending}
+              disabled={
+                createCommentMutation.isPending ||
+                (isLoggedIn && !comment.trim())
+              }
               onClick={handleCreateComment}
               className="disabled:cursor-not-allowed disabled:opacity-50"
             >
