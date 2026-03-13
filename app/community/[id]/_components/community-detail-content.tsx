@@ -1,17 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import {
-  notFound,
-  usePathname,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getLoginRedirectUrl } from "@/app/utils/auth/get-login-redirect-url";
-import CommunityDetailLoading from "./community-detail-loading";
-
 import FeedbackState from "@/app/components/feedback-state";
-
 import Header from "@/app/components/header";
 import TextButton from "@/app/components/text-button";
 import { useToast } from "@/app/hooks/useToast";
@@ -21,7 +13,6 @@ import {
   useCommunityCommentsQuery,
   useCommunityPostLikeStatusQuery,
   useCreateCommunityCommentMutation,
-  useCommunityDetailQuery,
   useDeleteCommunityCommentMutation,
   useDeleteCommunityPostMutation,
   useRecommendedCommunityPostsQuery,
@@ -37,26 +28,37 @@ import DetailKebab from "../../_components/detail-kebab";
 import AuthorMeta from "../../_components/author-meta";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { CommunityCommentItemData } from "../../_types";
+import type {
+  CommunityDetailData,
+  CommunityCommentItemData,
+  CommunityListItemData,
+} from "../../_types";
 
 type CommunityDetailContentProps = {
   postId: string;
+  initialPost: CommunityDetailData;
+  initialRecommendedPosts: CommunityListItemData[];
+  initialComments: CommunityCommentItemData[];
 };
 
 export default function CommunityDetailContent({
   postId,
+  initialPost,
+  initialRecommendedPosts,
+  initialComments,
 }: CommunityDetailContentProps) {
   const router = useRouter();
   const { success, error } = useToast();
   const [comment, setComment] = useState("");
   const commentInputRef = useRef<HTMLInputElement | null>(null);
   const currentUserQuery = useCurrentUserQuery();
-  const communityDetailQuery = useCommunityDetailQuery(postId);
   const recommendedPostsQuery = useRecommendedCommunityPostsQuery(
     postId,
-    communityDetailQuery.data?.service
+    initialPost.service,
+    initialRecommendedPosts
   );
-  const commentsQuery = useCommunityCommentsQuery(postId);
+
+  const commentsQuery = useCommunityCommentsQuery(postId, initialComments);
   const likeStatusQuery = useCommunityPostLikeStatusQuery(
     postId,
     currentUserQuery.data?.id
@@ -103,18 +105,7 @@ export default function CommunityDetailContent({
     </section>
   );
 
-  if (communityDetailQuery.isPending) {
-    return <CommunityDetailLoading />;
-  }
-  if (communityDetailQuery.isError) {
-    throw communityDetailQuery.error;
-  }
-
-  if (!communityDetailQuery.data) {
-    notFound();
-  }
-
-  const post = communityDetailQuery.data;
+  const post = initialPost;
   const isAuthor = currentUserQuery.data?.id === post.userId;
   const recommendedPosts = recommendedPostsQuery.data ?? [];
   const isLikeStatusResolved = likeStatusQuery.isSuccess;
