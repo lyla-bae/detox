@@ -1,4 +1,4 @@
-import CommunityDetailContent from "../_components/community-detail-content";
+import CommunityDetailContent from "./_components/community-detail-content";
 
 type CommunityDetailPageProps = {
   params: Promise<{ id: string }>;

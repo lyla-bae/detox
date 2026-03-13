@@ -24,15 +24,15 @@ import {
   useReportCommunityPostMutation,
   useToggleCommunityPostLikeMutation,
 } from "@/query/community";
-import CommentList from "./comment-list";
-import CommunityList from "./community-list";
-import CommunityPostListSkeleton from "./community-post-list-skeleton";
-import CommunityReactionStats from "./community-reaction-stats";
-import DetailKebab from "./detail-kebab";
-import AuthorMeta from "./author-meta";
+import CommentList from "../../_components/comment-list";
+import CommunityList from "../../_components/community-list";
+import CommunityPostListSkeleton from "../../_components/community-post-list-skeleton";
+import CommunityReactionStats from "../../_components/community-reaction-stats";
+import DetailKebab from "../../_components/detail-kebab";
+import AuthorMeta from "../../_components/author-meta";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { CommunityCommentItemData } from "../_types";
+import type { CommunityCommentItemData } from "../../_types";
 
 type CommunityDetailContentProps = {
   postId: string;
