@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import CommunityDetailContent from "./_components/community-detail-content";
+import CommunityDetailPageClient from "./_components/community-detail-page-client";
 import {
   getServerCommunityComments,
   getServerCommunityDetail,
@@ -29,7 +29,7 @@ export default async function CommunityDetailPage({
   ]);
 
   return (
-    <CommunityDetailContent
+    <CommunityDetailPageClient
       postId={id}
       initialPost={post}
       initialRecommendedPosts={recommendedPosts}

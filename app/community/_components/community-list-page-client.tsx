@@ -26,13 +26,18 @@ export default function CommunityListPageClient({
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const queryService = initialService === "all" ? undefined : initialService;
-  const communityListQuery = useInfiniteCommunityListQuery(
-    queryService,
-    initialPage
-  );
+  const {
+    data,
+    isPending,
+    isError,
+    isSuccess,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteCommunityListQuery(queryService, initialPage);
 
-  const items =
-    communityListQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const items = data?.pages.flatMap((page) => page.items) ?? [];
 
   const handleChangeService = (nextService: CommunityServiceFilter) => {
     const nextUrl =
@@ -42,8 +47,6 @@ export default function CommunityListPageClient({
 
     router.replace(nextUrl);
   };
-
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = communityListQuery;
 
   useEffect(() => {
     const node = loadMoreRef.current;
@@ -83,7 +86,7 @@ export default function CommunityListPageClient({
       bottomCTA
       ctaClassName="bg-gray-100"
       hasBottomNav
-      imageSrc="/images/emoji/no-alarm.png"
+      imageSrc="/images/emoji/error.png"
       contentClassName="gap-0"
       descriptionClassName="body-md font-normal text-gray-400"
     >
@@ -91,7 +94,7 @@ export default function CommunityListPageClient({
         variant="secondary"
         size="md"
         className="w-full"
-        onClick={() => communityListQuery.refetch()}
+        onClick={() => refetch()}
       >
         다시 시도
       </Button>
@@ -120,14 +123,13 @@ export default function CommunityListPageClient({
         <BrandTabs value={initialService} onChange={handleChangeService} />
 
         <section className="px-6">
-          {communityListQuery.isPending && renderLoading()}
-          {communityListQuery.isError && renderError()}
-          {communityListQuery.isSuccess && items.length === 0 && renderEmpty()}
-          {communityListQuery.isSuccess && items.length > 0 && (
+          {isPending && renderLoading()}
+          {isError && renderError()}
+          {isSuccess && items.length === 0 && renderEmpty()}
+          {isSuccess && items.length > 0 && (
             <>
               <CommunityList items={items} />
-              {communityListQuery.isFetchingNextPage &&
-                renderFetchMoreLoading()}
+              {isFetchingNextPage && renderFetchMoreLoading()}
               <div ref={loadMoreRef} className="h-10" />
             </>
           )}

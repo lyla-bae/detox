@@ -1,4 +1,5 @@
 "use client";
+
 import { faCommentDots, faThumbsUp } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { cn } from "@/lib/utils";
@@ -39,7 +40,9 @@ export default function CommunityReactionStats({
           size="sm"
           className={cn(isLiked ? "text-brand-primary" : "text-gray-200")}
         />
-        <span className={cn(isLiked ? "text-brand-primary" : "text-gray-400")}>
+        <span
+          className={cn(isLiked ? "text-brand-primary" : "text-gray-400")}
+        >
           {showLabel ? `좋아요 ${likeCount}` : `${likeCount}`}
         </span>
       </button>

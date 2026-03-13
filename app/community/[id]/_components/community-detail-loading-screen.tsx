@@ -3,7 +3,7 @@
 import Header from "@/app/components/header";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function CommunityDetailLoading() {
+export default function CommunityDetailLoadingScreen() {
   return (
     <>
       <Header variant="back" />

@@ -6,7 +6,7 @@ import FloatingButton from "@/app/components/floating-button";
 import BrandTabs from "./brand-tabs";
 import CommunityPostListSkeleton from "./community-post-list-skeleton";
 
-export default function CommunityListLoading() {
+export default function CommunityListLoadingScreen() {
   return (
     <div className="bg-gray-100 pb-15 min-h-screen">
       <Header variant="text" leftText="커뮤니티" rightContent="알람" />

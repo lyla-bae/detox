@@ -1,5 +1,5 @@
-import CommunityListLoading from "./_components/community-list-loading";
+import CommunityListLoadingScreen from "./_components/community-list-loading-screen";
 
 export default function Loading() {
-  return <CommunityListLoading />;
+  return <CommunityListLoadingScreen />;
 }
