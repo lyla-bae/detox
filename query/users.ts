@@ -13,6 +13,7 @@ import {
   getUserProfile,
   signInAnonymously,
   signOut,
+  updateUserProfile,
   upsertUser,
 } from "@/services/users";
 
@@ -144,5 +145,53 @@ export function useUserProfileQuery(userId?: string) {
       return data;
     },
     enabled: Boolean(userId),
+  });
+}
+
+/**
+ * 유저 프로필을 조회합니다. (Suspense용)
+ */
+export function useUserProfileSuspenseQuery(userId: string) {
+  return useSuspenseQuery({
+    queryKey: usersKeys.profileById(userId),
+    queryFn: async () => {
+      const { data, error } = await getUserProfile(userId);
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    },
+  });
+}
+
+interface UpdateUserProfileParams {
+  nickname?: string;
+  profile_image?: string;
+}
+
+/**
+ * 유저 프로필(닉네임, 프로필 이미지)을 수정합니다.
+ */
+export function useUpdateUserProfileMutation(userId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [...usersKeys.profile(), "update", userId],
+    mutationFn: async (params: UpdateUserProfileParams) => {
+      const { data, error } = await updateUserProfile(userId, params);
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data) {
+        queryClient.setQueryData(usersKeys.profileById(userId), data);
+      }
+    },
   });
 }
