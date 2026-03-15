@@ -1,5 +1,6 @@
 "use client";
 
+import { isNicknameConflictError } from "@/app/utils/auth/is-nickname-conflict-error";
 import {
   useMutation,
   useQuery,
@@ -17,26 +18,6 @@ import {
 } from "@/services/users";
 
 const NICKNAME_MAX_RETRY_COUNT = 5;
-function isNicknameConflictError(error: {
-  code?: string | null;
-  message?: string | null;
-  details?: string | null;
-  hint?: string | null;
-}) {
-  // Supabase/Postgres가 내려주는 에러 문자열 안에서 unique 제약과 nickname 컬럼명을 함께 확인합니다.
-  const errorMessage = [
-    error.message ?? "",
-    error.details ?? "",
-    error.hint ?? "",
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  const isUniqueViolation =
-    error.code === "23505" || errorMessage.includes("duplicate key");
-
-  return isUniqueViolation && errorMessage.includes("nickname");
-}
 
 export const usersKeys = {
   all: ["users"],
