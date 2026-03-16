@@ -12,24 +12,36 @@ export function useCurrentAuthUser() {
     let isMounted = true;
 
     const loadCurrentUser = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+      try {
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
 
-      if (!isMounted) {
-        return;
-      }
+        if (!isMounted) {
+          return;
+        }
 
-      if (error) {
-        console.error(error);
+        if (error) {
+          console.error(error);
+          setIsError(true);
+          return;
+        }
+
+        setCurrentUserId(user?.id ?? null);
+        setIsError(false);
+      } catch (currentUserError) {
+        if (!isMounted) {
+          return;
+        }
+
+        console.error(currentUserError);
         setIsError(true);
-        setIsPending(false);
-        return;
+      } finally {
+        if (isMounted) {
+          setIsPending(false);
+        }
       }
-
-      setCurrentUserId(user?.id ?? null);
-      setIsPending(false);
     };
 
     void loadCurrentUser();
