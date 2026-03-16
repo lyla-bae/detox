@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import { useRouter } from "next/navigation";
 import { cn } from "@/app/utils/class";
-import { getLoginRedirectUrl } from "@/app/utils/auth/get-login-redirect-url";
+import { useLoginRedirect } from "@/app/hooks/use-login-redirect";
 import { useCurrentUserQuery } from "@/query/users";
 
 type FloatingButtonProps = {
@@ -27,6 +27,7 @@ const variantMap = {
 export default function FloatingButton({ variant }: FloatingButtonProps) {
   const { icon, className, ariaLabel } = variantMap[variant];
   const router = useRouter();
+  const { moveToLogin } = useLoginRedirect("/community/new");
   const { data: currentUser, isPending: isCurrentUserPending } =
     useCurrentUserQuery();
 
@@ -40,7 +41,7 @@ export default function FloatingButton({ variant }: FloatingButtonProps) {
     }
 
     if (!currentUser?.id) {
-      router.push(getLoginRedirectUrl("/community/new"));
+      moveToLogin();
       return;
     }
 

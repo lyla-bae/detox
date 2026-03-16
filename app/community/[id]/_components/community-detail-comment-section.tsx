@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, type KeyboardEvent, type RefObject } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { getLoginRedirectUrl } from "@/app/utils/auth/get-login-redirect-url";
 import FeedbackState from "@/app/components/feedback-state";
+import { useLoginRedirect } from "@/app/hooks/use-login-redirect";
 import TextButton from "@/app/components/text-button";
 import { useToast } from "@/app/hooks/useToast";
 import { useCreateCommunityCommentMutation } from "@/query/community";
@@ -29,37 +28,18 @@ export default function CommunityDetailCommentSection({
   isCommentsError,
   commentInputRef,
 }: CommunityDetailCommentSectionProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { success, error } = useToast();
   const [comment, setComment] = useState("");
   const { data: currentUser } = useCurrentUserQuery();
   const currentUserId = currentUser?.id;
+  const { redirectToLoginIfNeeded } = useLoginRedirect();
   const { mutateAsync: createCommunityComment, isPending: isCreatePending } =
     useCreateCommunityCommentMutation();
 
   const isLoggedIn = Boolean(currentUserId);
-  const currentPath = searchParams.toString()
-    ? `${pathname}?${searchParams.toString()}`
-    : pathname;
-  const loginRedirectUrl = getLoginRedirectUrl(currentPath);
-
-  const moveToLogin = () => {
-    router.push(loginRedirectUrl);
-  };
-
-  const redirectToLoginIfNeeded = () => {
-    if (isLoggedIn) {
-      return false;
-    }
-
-    moveToLogin();
-    return true;
-  };
 
   const handleCreateComment = async () => {
-    if (redirectToLoginIfNeeded() || !currentUserId) {
+    if (redirectToLoginIfNeeded(isLoggedIn) || !currentUserId) {
       return;
     }
 
@@ -82,7 +62,7 @@ export default function CommunityDetailCommentSection({
   };
 
   const handleCommentFocus = () => {
-    redirectToLoginIfNeeded();
+    redirectToLoginIfNeeded(isLoggedIn);
   };
 
   const handleCommentKeyDown = async (

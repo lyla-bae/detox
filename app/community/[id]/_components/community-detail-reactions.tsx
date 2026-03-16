@@ -1,8 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { getLoginRedirectUrl } from "@/app/utils/auth/get-login-redirect-url";
+import { useLoginRedirect } from "@/app/hooks/use-login-redirect";
 import { useToast } from "@/app/hooks/useToast";
 import {
   useCommunityPostLikeStatusQuery,
@@ -24,12 +23,10 @@ export default function CommunityDetailReactions({
   commentCount,
   commentInputRef,
 }: CommunityDetailReactionsProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { success, error } = useToast();
   const { data: currentUser } = useCurrentUserQuery();
   const currentUserId = currentUser?.id;
+  const { redirectToLoginIfNeeded } = useLoginRedirect();
   const likeStatusQuery = useCommunityPostLikeStatusQuery(postId, currentUserId);
   const { mutateAsync: toggleCommunityPostLike, isPending: isTogglePending } =
     useToggleCommunityPostLikeMutation();
@@ -40,18 +37,8 @@ export default function CommunityDetailReactions({
     isTogglePending ||
     (isLoggedIn && (likeStatusQuery.isPending || likeStatusQuery.isError));
 
-  const currentPath = searchParams.toString()
-    ? `${pathname}?${searchParams.toString()}`
-    : pathname;
-  const loginRedirectUrl = getLoginRedirectUrl(currentPath);
-
-  const moveToLogin = () => {
-    router.push(loginRedirectUrl);
-  };
-
   const handleToggleLike = async () => {
-    if (!isLoggedIn) {
-      moveToLogin();
+    if (redirectToLoginIfNeeded(isLoggedIn)) {
       return;
     }
 
@@ -78,8 +65,7 @@ export default function CommunityDetailReactions({
   };
 
   const handleCommentClick = () => {
-    if (!isLoggedIn) {
-      moveToLogin();
+    if (redirectToLoginIfNeeded(isLoggedIn)) {
       return;
     }
 
