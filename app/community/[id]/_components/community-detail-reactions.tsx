@@ -1,7 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
-import { useCommunityDetailReactions } from "@/app/hooks/use-community-detail-reactions";
+import { useCommunityDetailReactions } from "@/app/community/_hooks/use-community-detail-reactions";
 import CommunityReactionStats from "../../_components/community-reaction-stats";
 
 interface CommunityDetailReactionsProps {

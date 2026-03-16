@@ -1,7 +1,7 @@
 "use client";
 
 import FeedbackState from "@/app/components/feedback-state";
-import { useCommunityCommentActions } from "@/app/hooks/use-community-comment-actions";
+import { useCommunityCommentActions } from "@/app/community/_hooks/use-community-comment-actions";
 import type { CommunityCommentItemData } from "../_types";
 import AuthorMeta from "./author-meta";
 import DetailKebab from "./detail-kebab";

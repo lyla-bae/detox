@@ -21,12 +21,12 @@ export function useCommunityCommentActions() {
     }
 
     return async () => {
-        await deleteCommunityComment({
-          commentId: item.id,
-          postId: item.postId,
-          userId: currentUserId,
-        });
-      };
+      await deleteCommunityComment({
+        commentId: item.id,
+        postId: item.postId,
+        userId: currentUserId,
+      });
+    };
   };
 
   const getReportHandler = (item: CommunityCommentItemData) => {
