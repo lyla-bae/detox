@@ -2,7 +2,7 @@
 
 import FeedbackPage from "@/app/components/feedback-page";
 
-export default function Error() {
+export default function CommunityDetailError() {
   return (
     <FeedbackPage
       title="게시글을 불러오지 못했어요."
