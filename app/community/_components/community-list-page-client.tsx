@@ -6,8 +6,8 @@ import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import FeedbackState from "@/app/components/feedback-state";
 import Header from "@/app/components/header";
 import BottomNav from "@/app/components/bottom-nav";
-import FloatingButton from "@/app/components/floating-button";
 import BrandTabs from "./brand-tabs";
+import CommunityCreateFloatingButton from "./community-create-floating-button";
 import CommunityList from "./community-list";
 import CommunityListErrorBoundary from "./community-list-error-boundary";
 import CommunityPostListSkeleton from "./community-post-list-skeleton";
@@ -139,7 +139,7 @@ export default function CommunityListPageClient({
         </section>
 
         <div className="fixed right-0 bottom-24 z-10">
-          <FloatingButton variant="create" />
+          <CommunityCreateFloatingButton />
         </div>
       </main>
 
