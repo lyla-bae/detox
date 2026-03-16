@@ -56,11 +56,7 @@ export default function MypageContent({ userId }: Props) {
       success("저장되었어요.");
     } catch (saveError) {
       console.error(saveError);
-      if (
-        typeof saveError === "object" &&
-        saveError !== null &&
-        isNicknameConflictError(saveError)
-      ) {
+      if (isNicknameConflictError(saveError)) {
         error("중복된 닉네임이에요.");
         return;
       }
