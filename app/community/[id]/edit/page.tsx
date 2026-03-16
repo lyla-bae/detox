@@ -1,7 +1,7 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import FeedbackPage from "@/app/components/feedback-page/feedback-page";
+import { useParams } from "next/navigation";
+import FeedbackPage from "@/app/components/feedback-page";
 import Header from "@/app/components/header";
 import { useCurrentAuthUser } from "@/app/hooks/use-current-auth-user";
 import LoadingScreen from "@/app/components/loading-screen";
@@ -10,7 +10,6 @@ import CommunityEditFormContent from "./_components/community-edit-form-content"
 
 function CommunityEditPageContent() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const { currentUserId, isPending: isCurrentUserPending, isError: isCurrentUserError } =
     useCurrentAuthUser();
 
@@ -35,7 +34,7 @@ function CommunityEditPageContent() {
         title="게시글을 불러오지 못했어요."
         description="죄송하지만 나중에 다시 시도해주세요."
         buttonLabel="커뮤니티로 가기"
-        onButtonClick={() => router.replace("/community")}
+        buttonHref="/community"
       />
     );
   }
@@ -46,7 +45,7 @@ function CommunityEditPageContent() {
         title="수정 권한이 없어요."
         description="작성한 게시글만 수정할 수 있어요."
         buttonLabel="게시글로 가기"
-        onButtonClick={() => router.replace(`/community/${id}`)}
+        buttonHref={`/community/${id}`}
       />
     );
   }
