@@ -7,6 +7,7 @@ import { useCurrentUserQuery } from "@/query/users";
 
 export default function CommunityCreateFloatingButton() {
   const router = useRouter();
+  const createPath = "/community/new";
   const { moveToLogin } = useLoginRedirect("/community/new");
   const {
     data: currentUser,
@@ -15,7 +16,12 @@ export default function CommunityCreateFloatingButton() {
   } = useCurrentUserQuery();
 
   const handleCreateClick = () => {
-    if (isCurrentUserPending || isCurrentUserError) {
+    if (isCurrentUserPending) {
+      return;
+    }
+
+    if (isCurrentUserError) {
+      router.push(createPath);
       return;
     }
 
@@ -24,7 +30,7 @@ export default function CommunityCreateFloatingButton() {
       return;
     }
 
-    router.push("/community/new");
+    router.push(createPath);
   };
 
   return (

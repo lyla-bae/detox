@@ -26,7 +26,10 @@ export function useCommunityDetailReactions({
   } = useCurrentUserQuery();
   const currentUserId = currentUser?.id;
   const { redirectToLoginIfNeeded } = useLoginRedirect();
-  const likeStatusQuery = useCommunityPostLikeStatusQuery(postId, currentUserId);
+  const likeStatusQuery = useCommunityPostLikeStatusQuery(
+    postId,
+    currentUserId
+  );
   const { mutateAsync: toggleCommunityPostLike, isPending: isTogglePending } =
     useToggleCommunityPostLikeMutation();
 
@@ -34,6 +37,7 @@ export function useCommunityDetailReactions({
   const isLiked = likeStatusQuery.isSuccess ? likeStatusQuery.data : false;
   const likeDisabled =
     isCurrentUserPending ||
+    isCurrentUserError ||
     isTogglePending ||
     (isLoggedIn && (likeStatusQuery.isPending || likeStatusQuery.isError));
 
