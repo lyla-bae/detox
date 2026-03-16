@@ -1,6 +1,6 @@
 import { subscriptableBrand } from "@/app/utils/brand/brand";
+import { getServerCommunityListPage } from "@/services/community";
 import type { CommunityServiceFilter } from "./_types";
-import { getServerCommunityListPage } from "./_server/community";
 import CommunityListPageClient from "./_components/community-list-page-client";
 
 type CommunityListPageProps = {

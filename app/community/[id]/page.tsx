@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import CommunityDetailPageClient from "./_components/community-detail-page-client";
 import {
   getServerCommunityComments,
   getServerCommunityDetail,
   getServerRecommendedCommunityPosts,
-} from "../_server/community";
+} from "@/services/community";
+import CommunityDetailPageClient from "./_components/community-detail-page-client";
 
 type CommunityDetailPageProps = {
   params: Promise<{ id: string }>;
