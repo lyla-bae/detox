@@ -5,16 +5,20 @@ type NicknameConflictErrorLike = {
   hint?: string | null;
 };
 
+const getSafeString = (value: unknown) =>
+  typeof value === "string" ? value : "";
+
 export function isNicknameConflictError(error: unknown) {
   if (typeof error !== "object" || error === null) {
     return false;
   }
 
   const typedError = error as NicknameConflictErrorLike;
+
   const errorMessage = [
-    typedError.message ?? "",
-    typedError.details ?? "",
-    typedError.hint ?? "",
+    getSafeString(typedError.message),
+    getSafeString(typedError.details),
+    getSafeString(typedError.hint),
   ]
     .join(" ")
     .toLowerCase();
