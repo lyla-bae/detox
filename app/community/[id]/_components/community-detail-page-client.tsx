@@ -2,10 +2,12 @@
 
 import { useRef } from "react";
 import Header from "@/app/components/header";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useRecommendedCommunityPostsQuery } from "@/query/community";
+import {
+  useCommunityCommentsQuery,
+  useCommunityDetailQuery,
+  useRecommendedCommunityPostsQuery,
+} from "@/query/community";
 import CommunityList from "../../_components/community-list";
-import CommunityPostListSkeleton from "../../_components/community-post-list-skeleton";
 import AuthorMeta from "../../_components/author-meta";
 import type {
   CommunityDetailData,
@@ -15,6 +17,7 @@ import type {
 import CommunityDetailCommentSection from "./community-detail-comment-section";
 import CommunityDetailPostActions from "./community-detail-post-actions";
 import CommunityDetailReactions from "./community-detail-reactions";
+import CommunityDetailRecommendedPostsSkeleton from "./community-detail-recommended-posts-skeleton";
 
 type CommunityDetailPageClientProps = {
   postId: string;
@@ -30,20 +33,16 @@ export default function CommunityDetailPageClient({
   initialComments,
 }: CommunityDetailPageClientProps) {
   const commentInputRef = useRef<HTMLInputElement | null>(null);
+  const detailQuery = useCommunityDetailQuery(postId, initialPost);
+  const commentsQuery = useCommunityCommentsQuery(postId, initialComments);
   const recommendedPostsQuery = useRecommendedCommunityPostsQuery(
     postId,
     initialPost.service,
     initialRecommendedPosts
   );
 
-  const renderRecommendedPostsLoading = () => (
-    <section className="bg-gray-50 px-6 py-6">
-      <Skeleton className="h-6 w-52" />
-      <CommunityPostListSkeleton count={3} className="pt-6" />
-    </section>
-  );
-
-  const post = initialPost;
+  const post = detailQuery.data ?? initialPost;
+  const comments = commentsQuery.data ?? [];
   const recommendedPosts = recommendedPostsQuery.data ?? [];
 
   return (
@@ -77,19 +76,21 @@ export default function CommunityDetailPageClient({
           <CommunityDetailReactions
             postId={postId}
             likeCount={post.likeCount}
-            commentCount={initialComments.length}
+            commentCount={comments.length}
             commentInputRef={commentInputRef}
           />
         </section>
 
         <CommunityDetailCommentSection
           postId={postId}
-          initialComments={initialComments}
+          comments={comments}
+          isCommentsPending={commentsQuery.isPending}
+          isCommentsError={commentsQuery.isError}
           commentInputRef={commentInputRef}
         />
 
         {recommendedPostsQuery.isPending ? (
-          renderRecommendedPostsLoading()
+          <CommunityDetailRecommendedPostsSkeleton />
         ) : recommendedPosts.length > 0 ? (
           <section className="bg-gray-50 px-6 py-6">
             <h3 className="title-md">

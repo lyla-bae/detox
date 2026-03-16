@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type RefObject } from "react";
+import { useState, type KeyboardEvent, type RefObject } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -8,24 +8,25 @@ import { getLoginRedirectUrl } from "@/app/utils/auth/get-login-redirect-url";
 import FeedbackState from "@/app/components/feedback-state";
 import TextButton from "@/app/components/text-button";
 import { useToast } from "@/app/hooks/useToast";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  useCommunityCommentsQuery,
-  useCreateCommunityCommentMutation,
-} from "@/query/community";
+import { useCreateCommunityCommentMutation } from "@/query/community";
 import { useCurrentUserQuery } from "@/query/users";
 import CommentList from "../../_components/comment-list";
 import type { CommunityCommentItemData } from "../../_types";
+import CommunityDetailCommentsSkeleton from "./community-detail-comments-skeleton";
 
 interface CommunityDetailCommentSectionProps {
   postId: string;
-  initialComments: CommunityCommentItemData[];
+  comments: CommunityCommentItemData[];
+  isCommentsPending: boolean;
+  isCommentsError: boolean;
   commentInputRef: RefObject<HTMLInputElement | null>;
 }
 
 export default function CommunityDetailCommentSection({
   postId,
-  initialComments,
+  comments,
+  isCommentsPending,
+  isCommentsError,
   commentInputRef,
 }: CommunityDetailCommentSectionProps) {
   const router = useRouter();
@@ -35,7 +36,6 @@ export default function CommunityDetailCommentSection({
   const [comment, setComment] = useState("");
   const { data: currentUser } = useCurrentUserQuery();
   const currentUserId = currentUser?.id;
-  const commentsQuery = useCommunityCommentsQuery(postId, initialComments);
   const { mutateAsync: createCommunityComment, isPending: isCreatePending } =
     useCreateCommunityCommentMutation();
 
@@ -49,24 +49,17 @@ export default function CommunityDetailCommentSection({
     router.push(loginRedirectUrl);
   };
 
-  const renderCommentsLoading = () => (
-    <div className="grid grid-cols-1 gap-5 py-5">
-      {Array.from({ length: 2 }).map((_, index) => (
-        <div key={index} className="grid grid-cols-1 gap-3 rounded-lg bg-white">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-8 rounded-full" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-4/5" />
-        </div>
-      ))}
-    </div>
-  );
+  const redirectToLoginIfNeeded = () => {
+    if (isLoggedIn) {
+      return false;
+    }
+
+    moveToLogin();
+    return true;
+  };
 
   const handleCreateComment = async () => {
-    if (!currentUserId) {
-      moveToLogin();
+    if (redirectToLoginIfNeeded() || !currentUserId) {
       return;
     }
 
@@ -88,13 +81,28 @@ export default function CommunityDetailCommentSection({
     }
   };
 
+  const handleCommentFocus = () => {
+    redirectToLoginIfNeeded();
+  };
+
+  const handleCommentKeyDown = async (
+    event: KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (event.key !== "Enter" || event.nativeEvent.isComposing) {
+      return;
+    }
+
+    event.preventDefault();
+    await handleCreateComment();
+  };
+
   return (
     <section className="border-t border-gray-50 px-6 py-5">
       <h3 className="title-md text-gray-400">댓글</h3>
 
-      {commentsQuery.isPending ? (
-        renderCommentsLoading()
-      ) : commentsQuery.isError ? (
+      {isCommentsPending ? (
+        <CommunityDetailCommentsSkeleton />
+      ) : isCommentsError ? (
         <FeedbackState
           description="댓글을 불러오지 못했어요."
           className="py-8"
@@ -103,25 +111,19 @@ export default function CommunityDetailCommentSection({
           descriptionClassName="body-md font-normal text-gray-400"
         />
       ) : (
-        <CommentList items={commentsQuery.data ?? []} />
+        <CommentList items={comments} />
       )}
 
       <div className="mt-4 flex items-center rounded-lg bg-gray-50 px-4 py-3">
         <input
           ref={commentInputRef}
           type="text"
+          aria-label="댓글 입력"
           value={comment}
-          onChange={(event) => {
-            if (!isLoggedIn) {
-              return;
-            }
-
-            setComment(event.target.value);
-          }}
-          onFocus={() => {
-            if (!isLoggedIn) {
-              moveToLogin();
-            }
+          onChange={(event) => setComment(event.target.value)}
+          onFocus={handleCommentFocus}
+          onKeyDown={(event) => {
+            void handleCommentKeyDown(event);
           }}
           placeholder={
             isLoggedIn
@@ -133,6 +135,7 @@ export default function CommunityDetailCommentSection({
         />
         <TextButton
           size="md"
+          aria-label="댓글 전송"
           disabled={isCreatePending || (isLoggedIn && !comment.trim())}
           onClick={handleCreateComment}
           className="disabled:cursor-not-allowed disabled:opacity-50"

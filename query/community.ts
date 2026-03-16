@@ -221,11 +221,16 @@ export function useInfiniteCommunityListQuery(
 }
 
 //상세
-export function useCommunityDetailQuery(postId: string) {
+export function useCommunityDetailQuery(
+  postId: string,
+  initialPost?: CommunityDetailData
+) {
   return useQuery({
     queryKey: communityKeys.detail(postId),
     queryFn: () => getCommunityDetail(postId),
     enabled: Boolean(postId),
+    initialData: initialPost,
+    refetchOnMount: false,
   });
 }
 
