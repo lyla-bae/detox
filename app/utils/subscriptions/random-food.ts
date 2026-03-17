@@ -42,6 +42,10 @@ export const FOOD_OPTIONS: FoodOption[] = [
   },
 ];
 
+export const MIN_FOOD_PRICE = Math.min(
+  ...FOOD_OPTIONS.map((food) => food.price)
+);
+
 export function getFoodCount(totalPrice: number, foodPrice: number) {
   if (foodPrice <= 0) {
     return 0;

@@ -1,3 +1,5 @@
+import { MIN_FOOD_PRICE } from "./random-food";
+
 export type SubscriptionSummary =
   | {
       type: "empty";
@@ -40,6 +42,10 @@ export function getSubscriptionSummary({
   const savedPrice = lastMonthTotal - thisMonthTotal;
 
   if (savedPrice > 0) {
+    if (savedPrice < MIN_FOOD_PRICE) {
+      return { type: "same" };
+    }
+
     return {
       type: "saved",
       targetPrice: savedPrice,
