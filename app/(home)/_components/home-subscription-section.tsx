@@ -1,5 +1,5 @@
+import Link from "next/link";
 import SubscriptionList from "@/app/components/subscription-list";
-import Button from "@/app/components/button";
 import type { SubscriptableBrandType } from "@/app/utils/brand/type";
 
 export interface HomeSubscriptionItem {
@@ -67,9 +67,9 @@ export default function HomeSubscriptionSection({
         )}
       </div>
       <div className="mx-6 btn-wrap">
-        <Button variant="primary" size="lg">
+        <Link href="/subscription/add" className="btn btn-primary btn-lg">
           구독 추가하기
-        </Button>
+        </Link>
       </div>
     </section>
   );
