@@ -1,5 +1,3 @@
-"use client";
-
 import HomeSummaryCard from "./_components/home-summary-card";
 import Header from "../components/header";
 import SubscriptionList from "../components/subscription-list";
@@ -23,8 +21,8 @@ interface SubscriptionItem {
 
 export default function Home() {
   // 실제 데이터와 무관하게 홈 상단/빈 상태 UI만 분기하고, 목록은 목업 데이터를 유지합니다.
-  const showSubscribedUiState = true;
-  const subsList: Omit<SubscriptionItem, "name">[] = [
+  const hasSubscription = true;
+  const subscriptionItems: Omit<SubscriptionItem, "name">[] = [
     //더미 데이터
     {
       id: 1,
@@ -66,12 +64,12 @@ export default function Home() {
     },
   ];
 
-  const subscriptionList: SubscriptionItem[] = subsList.map((item) => ({
+  const subscriptionList: SubscriptionItem[] = subscriptionItems.map((item) => ({
     ...item,
     name: subscriptableBrand[item.brandType].label,
   }));
   const subscriptionCount = subscriptionList.length;
-  const totalPrice = subscriptionList.reduce(
+  const thisMonthTotal = subscriptionList.reduce(
     (sum, item) => sum + (item.price ?? 0),
     0
   );
@@ -81,7 +79,10 @@ export default function Home() {
       <Header rightContent="알람아이콘" />
       <main>
         <section className="px-6 py-5 mb-4 bg-white grid grid-cols-[1fr_100px] items-center justify-between">
-          <HomeSummaryCard showSubscribedUiState={showSubscribedUiState} />
+          <HomeSummaryCard
+            hasSubscription={hasSubscription}
+            thisMonthTotal={thisMonthTotal}
+          />
         </section>
         <section className="pt-10 bg-white border-t-gray-100 border-t-16">
           <div className="relative flex flex-col justify-center items-start gap-4 ">
@@ -92,7 +93,7 @@ export default function Home() {
                   총 {subscriptionCount}개
                 </span>
               </h6>
-              <h6 className="header-md">{totalPrice.toLocaleString()}원</h6>
+              <h6 className="header-md">{thisMonthTotal.toLocaleString()}원</h6>
             </div>
             <ul className="px-6 w-full">
               {subscriptionList.map((item) => (
@@ -111,7 +112,7 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            {!showSubscribedUiState && (
+            {!hasSubscription && (
               <div className="absolute w-full h-full flex flex-col items-center justify-center gap-4 text-center bg-linear-to-bl from-white/50 to-white backdrop-blur-[1.5px]">
                 <h6 className="title-md text-black">
                   구독 서비스를 추가 하세요
