@@ -32,6 +32,10 @@ export function getSubscriptionSummary({
     return { type: "empty" };
   }
 
+  if (thisMonthTotal < MIN_FOOD_PRICE) {
+    return { type: "same" };
+  }
+
   if (typeof lastMonthTotal !== "number") {
     return {
       type: "this-month",
