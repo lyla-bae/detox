@@ -135,6 +135,7 @@ export default function CommunityDetailCommentSection({
           size="md"
           aria-label="댓글 전송"
           disabled={
+            !isLoggedIn ||
             isCurrentUserPending ||
             isCreatePending ||
             isCurrentUserError ||

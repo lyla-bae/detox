@@ -147,12 +147,16 @@ export default function CommunityListPageClient({
             <div
               className={`absolute right-0 transition-opacity duration-200 ease-out ${
                 showCreateFloatingButton ? "bottom-[calc(100%+0.75rem)]" : "bottom-0"
-              } ${showTopFloatingButton ? "opacity-100" : "pointer-events-none opacity-0"}`}
+              } ${
+                showTopFloatingButton
+                  ? "visible opacity-100"
+                  : "pointer-events-none invisible opacity-0"
+              }`}
               aria-hidden={!showTopFloatingButton}
             >
               <FloatingButton variant="top" />
             </div>
-            <CommunityCreateFloatingButton />
+            {showCreateFloatingButton ? <CommunityCreateFloatingButton /> : null}
           </div>
         </div>
       </main>

@@ -7,7 +7,6 @@ import { useTopFloatingButtonVisible } from "@/app/hooks/use-top-floating-button
 const TOP_BUTTON_VISIBLE_PATHS = new Set([
   "/",
   "/statistics",
-  "/community",
   "/mypage",
 ]);
 
@@ -15,14 +14,14 @@ export default function GlobalTopFloatingButton() {
   const pathname = usePathname();
   const isVisible = useTopFloatingButtonVisible();
 
-  if (!TOP_BUTTON_VISIBLE_PATHS.has(pathname) || pathname === "/community") {
+  if (!TOP_BUTTON_VISIBLE_PATHS.has(pathname)) {
     return null;
   }
 
   return (
     <div
       className={`fixed right-0 bottom-24 z-10 transition-all duration-200 ease-out ${
-        isVisible ? "opacity-100" : "pointer-events-none opacity-0"
+        isVisible ? "visible opacity-100" : "pointer-events-none invisible opacity-0"
       }`}
       aria-hidden={!isVisible}
     >
