@@ -20,7 +20,7 @@ export default function GlobalTopFloatingButton() {
 
   return (
     <div
-      className={`fixed right-0 bottom-24 z-10 transition-all duration-200 ease-out ${
+      className={`fixed right-0 bottom-24 z-10 transition-opacity duration-200 ease-out ${
         isVisible ? "visible opacity-100" : "pointer-events-none invisible opacity-0"
       }`}
       aria-hidden={!isVisible}
