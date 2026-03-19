@@ -19,6 +19,7 @@ import { useCurrentUserQuery, useUserProfileQuery } from "@/query/users";
 import { useAnalysisStore } from "@/store/useAnalysisStore";
 import { Database } from "@/types/supabase.types";
 import { AnalysisResponse } from "@/app/utils/subscriptions/validation";
+import { Tables } from "@/types/supabase.types";
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -258,7 +259,10 @@ export default function StatisticsPage() {
                                 aria-label="다음 서비스 비교 보기"
                                 className="absolute right-8 top-28 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-gray-600 shadow-sm"
                               >
-                                <FontAwesomeIcon icon={faCaretRight} size="lg" />
+                                <FontAwesomeIcon
+                                  icon={faCaretRight}
+                                  size="lg"
+                                />
                               </button>
 
                               <ComparisonChart
@@ -281,7 +285,9 @@ export default function StatisticsPage() {
                     <div className="mt-10 border-t-8 border-gray-50">
                       <AnalysisSummary
                         hasData={!!analysisData}
-                        analysisData={analysisData as unknown as AnalysisResponse}
+                        analysisData={
+                          analysisData as unknown as AnalysisResponse
+                        }
                       />
                     </div>
                   )}
