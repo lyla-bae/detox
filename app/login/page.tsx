@@ -38,6 +38,13 @@ function LoginContent() {
 
   const handleSocialLogin = async (provider: "google" | "kakao") => {
     try {
+      console.log(
+        "handleSocialLogin",
+        redirectPath,
+        window.location.origin,
+        provider,
+        nextPath
+      );
       const redirectTo = `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(nextPath)}`;
 
       const { error: oauthError } = await signInWithOAuth(provider, redirectTo);
