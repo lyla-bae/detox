@@ -45,11 +45,20 @@ export const metadata: Metadata = {
     siteName: "Detox",
     locale: "ko_KR",
     type: "website",
+    images: [
+      {
+        url: "/images/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Detox",
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Detox",
     description: "디지털 구독 다이어트 서비스",
+    images: ["/images/og-image.png"],
   },
   robots: {
     index: true,
