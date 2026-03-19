@@ -7,7 +7,7 @@ export default function EmptySubscriptionOverlay() {
   const router = useRouter();
 
   return (
-    <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-white/70 backdrop-blur-[2px]">
+    <div className="inset-0 z-40 flex flex-col items-center justify-center bg-white/70 backdrop-blur-[2px]">
       <div className="text-center px-6 mb-12">
         <h2 className="title-md text-black mb-2">구독 서비스를 추가하세요</h2>
         <p className="body-lg text-gray-500 leading-relaxed">
@@ -23,7 +23,7 @@ export default function EmptySubscriptionOverlay() {
         <Button
           variant="primary"
           size="lg"
-          onClick={() => router.push("/subscriptions")}
+          onClick={() => router.push("/subscription/add")}
         >
           구독 추가하기
         </Button>
