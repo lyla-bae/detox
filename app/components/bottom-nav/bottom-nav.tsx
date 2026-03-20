@@ -46,7 +46,7 @@ export default function BottomNav() {
             href={href}
             className={cn(
               "flex flex-col items-center justify-around gap-1",
-              isActive(href) ? "text-blue-400" : "text-gray-300"
+              isActive(href) ? "text-brand-primary" : "text-gray-300"
             )}
             aria-current={isActive(href) ? "page" : undefined}
           >
