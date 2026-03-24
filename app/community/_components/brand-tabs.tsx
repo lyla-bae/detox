@@ -44,12 +44,12 @@ export default function BrandTabs(props: BrandTabsProps) {
               aria-pressed={isActive}
               onClick={() => props.onChange?.("all")}
               className={cn(
-                "flex min-w-fit flex-col items-center gap-2 transition-opacity"
+                "flex min-w-fit flex-col items-center gap-2 transition-opacity cursor-pointer"
               )}
             >
               <div
                 className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-xl border",
+                  "flex h-12 w-12 items-center justify-center rounded-xl border cursor-pointer",
                   isActive
                     ? "border-brand-primary bg-brand-primary text-white"
                     : "border-gray-100 bg-white text-gray-400"
@@ -76,7 +76,7 @@ export default function BrandTabs(props: BrandTabsProps) {
             aria-pressed={isActive}
             onClick={() => onChange?.(tab.key as CommunityServiceValue)}
             className={cn(
-              "flex min-w-fit max-w-12 flex-col items-center gap-2 transition-opacity"
+              "flex min-w-fit max-w-12 flex-col items-center gap-2 transition-opacity cursor-pointer"
             )}
           >
             <BrandBox
@@ -86,7 +86,7 @@ export default function BrandTabs(props: BrandTabsProps) {
             />
             <span
               className={cn(
-                "max-w-12 text-center text-sm leading-[110%] whitespace-normal break-keep",
+                "max-w-12 text-center text-sm leading-[110%] whitespace-normal break-keep cursor-pointer",
                 isActive ? "font-semibold text-black" : "text-black"
               )}
             >
