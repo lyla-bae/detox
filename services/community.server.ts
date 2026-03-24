@@ -12,12 +12,29 @@ import type { Tables } from "@/types/supabase.types";
 
 type UserPreview = Pick<Tables<"users">, "id" | "nickname" | "profile_image">;
 
-type PostWithCounts = Tables<"post"> & {
-  comment: { count: number }[];
+type PostWithLikes = Tables<"post"> & {
   likes: { count: number }[];
 };
 
 const USER_PREVIEW_SELECT = "id, nickname, profile_image";
+
+function createPostCountMap(
+  rows: Pick<Tables<"comment">, "post_id">[] | null | undefined
+) {
+  const countMap = new Map<string, number>();
+
+  (rows ?? []).forEach((row) => {
+    const postId = row.post_id;
+
+    if (!postId) {
+      return;
+    }
+
+    countMap.set(postId, (countMap.get(postId) ?? 0) + 1);
+  });
+
+  return countMap;
+}
 
 export async function getServerCommunityListPage(params: {
   service?: SubscriptableBrandType;
@@ -32,7 +49,6 @@ export async function getServerCommunityListPage(params: {
     .select(
       `
       *,
-      comment(count),
       likes(count)
     `
     )
@@ -57,7 +73,7 @@ export async function getServerCommunityListPage(params: {
     throw postsError;
   }
 
-  const posts = (data ?? []) as PostWithCounts[];
+  const posts = (data ?? []) as PostWithLikes[];
 
   if (posts.length === 0) {
     return {
@@ -69,20 +85,35 @@ export async function getServerCommunityListPage(params: {
   const hasNextPage = posts.length > pageSize;
   const visiblePosts = hasNextPage ? posts.slice(0, pageSize) : posts;
   const userIds = [...new Set(visiblePosts.map((post) => post.user_id))];
+  const postIds = visiblePosts.map((post) => post.id);
 
-  const { data: users, error: usersError } = await supabase
-    .from("users")
-    .select(USER_PREVIEW_SELECT)
-    .in("id", userIds)
-    .is("deleted_at", null);
+  const [
+    { data: users, error: usersError },
+    { data: activeComments, error: commentsError },
+  ] = await Promise.all([
+    supabase
+      .from("users")
+      .select(USER_PREVIEW_SELECT)
+      .in("id", userIds)
+      .is("deleted_at", null),
+    supabase
+      .from("comment")
+      .select("post_id")
+      .in("post_id", postIds)
+      .is("deleted_at", null),
+  ]);
 
   if (usersError) {
     throw usersError;
+  }
+  if (commentsError) {
+    throw commentsError;
   }
 
   const userMap = new Map<string, UserPreview>(
     (users ?? []).map((user) => [user.id, user])
   );
+  const commentCountMap = createPostCountMap(activeComments);
 
   const items = visiblePosts.map((post) => {
     const user = userMap.get(post.user_id);
@@ -95,7 +126,7 @@ export async function getServerCommunityListPage(params: {
       title: post.title,
       content: post.content,
       likeCount: post.likes?.[0]?.count ?? 0,
-      commentCount: post.comment?.[0]?.count ?? 0,
+      commentCount: commentCountMap.get(post.id) ?? 0,
       thumbUrl: user?.profile_image ?? "/images/default-user.png",
     };
   });
