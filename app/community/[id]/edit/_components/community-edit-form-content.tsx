@@ -63,7 +63,7 @@ export default function CommunityEditFormContent({
         includeAll={false}
       />
 
-      <main className="px-6">
+      <main className="px-6 mt-10">
         <CommunityForm
           title={title}
           content={content}
