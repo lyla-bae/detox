@@ -49,9 +49,15 @@ export default function BrandTabs(props: BrandTabsProps) {
   }, [brandTabs, emblaApi, value]);
 
   return (
-    <div className="mt-5" aria-label="커뮤니티 카테고리">
+    <div
+      className="mt-5"
+      role="group"
+      aria-label="커뮤니티 카테고리"
+    >
       <div ref={emblaRef} className="overflow-hidden">
-        <div className="tab-wrap ml-6 flex gap-2 mr-6">
+        <div
+          className="tab-wrap ml-6 mr-6 flex gap-2 touch-pan-y touch-pinch-zoom"
+        >
           {brandTabs.map((tab) => {
             const isActive = value === tab.key;
 
