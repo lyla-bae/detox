@@ -23,10 +23,7 @@ interface Props {
   onLogoutStateChange?: (isLoggingOut: boolean) => void;
 }
 
-export default function MypageContent({
-  userId,
-  onLogoutStateChange,
-}: Props) {
+export default function MypageContent({ userId, onLogoutStateChange }: Props) {
   const router = useRouter();
   const { success, error } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -142,7 +139,7 @@ export default function MypageContent({
             />
             <button
               type="button"
-              className="absolute bottom-0 right-[-10px]"
+              className="absolute bottom-0 right-[-10px] cursor-pointer"
               onClick={() => {
                 if (fileInputRef.current) {
                   fileInputRef.current.value = "";
@@ -154,8 +151,8 @@ export default function MypageContent({
               <Image
                 src="/images/my-page/upload-image.png"
                 alt="edit-profile"
-                width={44}
-                height={44}
+                width={48}
+                height={48}
               />
             </button>
           </div>
