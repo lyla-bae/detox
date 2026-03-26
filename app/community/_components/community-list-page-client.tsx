@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import TopFloatingButton from "@/app/components/floating-button/top-floating-button";
 import FeedbackState from "@/app/components/feedback-state";
@@ -23,16 +22,13 @@ interface CommunityListPageClientProps {
 }
 
 interface CommunityListContentProps {
-  initialService: CommunityServiceFilter;
-  initialPage: CommunityListPage;
+  service: CommunityServiceFilter;
+  initialPage?: CommunityListPage;
 }
 
-function CommunityListContent({
-  initialService,
-  initialPage,
-}: CommunityListContentProps) {
+function CommunityListContent({ service, initialPage }: CommunityListContentProps) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const queryService = initialService === "all" ? undefined : initialService;
+  const queryService = service === "all" ? undefined : service;
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useSuspenseInfiniteCommunityListQuery(queryService, initialPage);
 
@@ -68,7 +64,7 @@ function CommunityListContent({
   const renderEmpty = () => (
     <FeedbackState
       description={
-        initialService === "all"
+        service === "all"
           ? "아직 등록된 게시글이 없어요."
           : "선택한 서비스의 게시글이 아직 없어요."
       }
@@ -96,24 +92,34 @@ export default function CommunityListPageClient({
   initialService,
   initialPage,
 }: CommunityListPageClientProps) {
-  const router = useRouter();
+  const [selectedService, setSelectedService] =
+    useState<CommunityServiceFilter>(initialService);
   const showTopFloatingButton = useTopFloatingButtonVisible();
   const {
     data: currentUser,
     isPending: isCurrentUserPending,
     isError: isCurrentUserError,
   } = useCurrentUserQuery();
-  const resetKey = `${initialService}:${initialPage.items.length}`;
+  const selectedInitialPage =
+    selectedService === initialService ? initialPage : undefined;
+  const resetKey = selectedService;
   const showCreateFloatingButton =
     !isCurrentUserPending && !isCurrentUserError && Boolean(currentUser?.id);
 
-  const handleChangeService = (nextService: CommunityServiceFilter) => {
+  const syncServiceToUrl = (service: CommunityServiceFilter) => {
     const nextUrl =
-      nextService === "all"
-        ? "/community"
-        : `/community?service=${nextService}`;
+      service === "all" ? "/community" : `/community?service=${service}`;
 
-    router.replace(nextUrl);
+    window.history.replaceState(null, "", nextUrl);
+  };
+
+  const handleChangeService = (nextService: CommunityServiceFilter) => {
+    if (nextService === selectedService) {
+      return;
+    }
+
+    setSelectedService(nextService);
+    syncServiceToUrl(nextService);
   };
 
   return (
@@ -121,7 +127,7 @@ export default function CommunityListPageClient({
       <Header variant="text" leftText="커뮤니티" hasNotification />
 
       <main>
-        <BrandTabs value={initialService} onChange={handleChangeService} />
+        <BrandTabs value={selectedService} onChange={handleChangeService} />
 
         <section className="px-6">
           <QueryErrorResetBoundary>
@@ -133,8 +139,8 @@ export default function CommunityListPageClient({
                   }
                 >
                   <CommunityListContent
-                    initialService={initialService}
-                    initialPage={initialPage}
+                    service={selectedService}
+                    initialPage={selectedInitialPage}
                   />
                 </Suspense>
               </CommunityListErrorBoundary>
