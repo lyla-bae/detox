@@ -61,6 +61,8 @@ export const communityKeys = {
   ],
 } as const;
 
+const COMMUNITY_LIST_STALE_TIME = 30 * 1000;
+
 //좋아요 낙관적 업데이트 롤백용
 type CommunityLikeMutationContext = {
   previousDetail?: CommunityDetailData | null;
@@ -222,6 +224,7 @@ export function useInfiniteCommunityListQuery(
           pageParams: [null],
         }
       : undefined,
+    staleTime: COMMUNITY_LIST_STALE_TIME,
   });
 }
 
@@ -244,6 +247,7 @@ export function useSuspenseInfiniteCommunityListQuery(
           pageParams: [null],
         }
       : undefined,
+    staleTime: COMMUNITY_LIST_STALE_TIME,
   });
 }
 
