@@ -88,23 +88,48 @@ function CommunityListContent({ service, initialPage }: CommunityListContentProp
   );
 }
 
-export default function CommunityListPageClient({
-  initialService,
-  initialPage,
-}: CommunityListPageClientProps) {
-  const [selectedService, setSelectedService] =
-    useState<CommunityServiceFilter>(initialService);
+function CommunityFloatingActions() {
   const showTopFloatingButton = useTopFloatingButtonVisible();
   const {
     data: currentUser,
     isPending: isCurrentUserPending,
     isError: isCurrentUserError,
   } = useCurrentUserQuery();
+  const showCreateFloatingButton =
+    !isCurrentUserPending && !isCurrentUserError && Boolean(currentUser?.id);
+
+  return (
+    <div className="fixed bottom-24 left-1/2 z-10 w-full max-w-(--max-width) -translate-x-1/2">
+      <div className="relative flex justify-end">
+        <div
+          className={`absolute right-0 transition-opacity duration-200 ease-out ${
+            showCreateFloatingButton
+              ? "bottom-[calc(100%+0.75rem)]"
+              : "bottom-0"
+          } ${
+            showTopFloatingButton
+              ? "visible opacity-100"
+              : "pointer-events-none invisible opacity-0"
+          }`}
+          aria-hidden={!showTopFloatingButton}
+        >
+          <TopFloatingButton />
+        </div>
+        {showCreateFloatingButton ? <CommunityCreateFloatingButton /> : null}
+      </div>
+    </div>
+  );
+}
+
+export default function CommunityListPageClient({
+  initialService,
+  initialPage,
+}: CommunityListPageClientProps) {
+  const [selectedService, setSelectedService] =
+    useState<CommunityServiceFilter>(initialService);
   const selectedInitialPage =
     selectedService === initialService ? initialPage : undefined;
   const resetKey = selectedService;
-  const showCreateFloatingButton =
-    !isCurrentUserPending && !isCurrentUserError && Boolean(currentUser?.id);
 
   const syncServiceToUrl = (service: CommunityServiceFilter) => {
     const nextUrl =
@@ -148,27 +173,7 @@ export default function CommunityListPageClient({
           </QueryErrorResetBoundary>
         </section>
 
-        <div className="fixed bottom-24 left-1/2 z-10 w-full max-w-(--max-width) -translate-x-1/2">
-          <div className="relative flex justify-end">
-            <div
-              className={`absolute right-0 transition-opacity duration-200 ease-out ${
-                showCreateFloatingButton
-                  ? "bottom-[calc(100%+0.75rem)]"
-                  : "bottom-0"
-              } ${
-                showTopFloatingButton
-                  ? "visible opacity-100"
-                  : "pointer-events-none invisible opacity-0"
-              }`}
-              aria-hidden={!showTopFloatingButton}
-            >
-              <TopFloatingButton />
-            </div>
-            {showCreateFloatingButton ? (
-              <CommunityCreateFloatingButton />
-            ) : null}
-          </div>
-        </div>
+        <CommunityFloatingActions />
       </main>
 
       <BottomNav />
