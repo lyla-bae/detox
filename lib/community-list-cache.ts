@@ -1,0 +1,4 @@
+export const COMMUNITY_LIST_CACHE_TAG = "community-list";
+export const COMMUNITY_LIST_CACHE_REVALIDATE_SECONDS = 15;
+export const COMMUNITY_LIST_DEFAULT_PAGE_SIZE = 10;
+export const COMMUNITY_LIST_MAX_PAGE_SIZE = 30;
