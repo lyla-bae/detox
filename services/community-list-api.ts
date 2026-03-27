@@ -11,7 +11,6 @@ type CommunityListRequestParams = {
 };
 
 const COMMUNITY_LIST_API_PATH = "/api/community/list";
-const COMMUNITY_LIST_REVALIDATE_API_PATH = "/api/community/list/revalidate";
 
 export function createCommunityListApiPath(params: CommunityListRequestParams) {
   const searchParams = new URLSearchParams();
@@ -56,15 +55,4 @@ export async function fetchCommunityListPage(
   }
 
   return (await response.json()) as CommunityListPage;
-}
-
-export async function requestCommunityListRevalidation() {
-  const response = await fetch(COMMUNITY_LIST_REVALIDATE_API_PATH, {
-    method: "POST",
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("커뮤니티 목록 캐시를 갱신하지 못했어요.");
-  }
 }

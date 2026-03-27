@@ -11,11 +11,8 @@ import type { SubscriptableBrandType } from "@/app/utils/brand/type";
 import {
   createCommunityListApiPath,
   fetchCommunityListPage,
-  requestCommunityListRevalidation,
 } from "@/services/community-list-api";
 import type { Tables } from "@/types/supabase.types";
-
-export { requestCommunityListRevalidation };
 
 type UserPreview = Pick<Tables<"users">, "id" | "nickname" | "profile_image">;
 
