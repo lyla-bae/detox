@@ -12,25 +12,19 @@ import CommunityCreateFloatingButton from "./community-create-floating-button";
 import CommunityList from "./community-list";
 import CommunityListErrorBoundary from "./community-list-error-boundary";
 import CommunityPostListSkeleton from "./community-post-list-skeleton";
-import type { CommunityListPage, CommunityServiceFilter } from "../_types";
+import type { CommunityServiceFilter } from "../_types";
 import { useSuspenseInfiniteCommunityListQuery } from "@/query/community";
 import { useCurrentUserQuery } from "@/query/users";
 
 interface CommunityListPageClientProps {
   initialService: CommunityServiceFilter;
-  initialPage: CommunityListPage;
 }
 
-interface CommunityListContentProps {
-  service: CommunityServiceFilter;
-  initialPage?: CommunityListPage;
-}
-
-function CommunityListContent({ service, initialPage }: CommunityListContentProps) {
+function CommunityListContent({ service }: { service: CommunityServiceFilter }) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const queryService = service === "all" ? undefined : service;
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage } =
-    useSuspenseInfiniteCommunityListQuery(queryService, initialPage);
+    useSuspenseInfiniteCommunityListQuery(queryService);
 
   const items = data?.pages.flatMap((page) => page.items) ?? [];
 
@@ -123,12 +117,9 @@ function CommunityFloatingActions() {
 
 export default function CommunityListPageClient({
   initialService,
-  initialPage,
 }: CommunityListPageClientProps) {
   const [selectedService, setSelectedService] =
     useState<CommunityServiceFilter>(initialService);
-  const selectedInitialPage =
-    selectedService === initialService ? initialPage : undefined;
   const resetKey = selectedService;
 
   const syncServiceToUrl = (service: CommunityServiceFilter) => {
@@ -165,10 +156,7 @@ export default function CommunityListPageClient({
                     <CommunityPostListSkeleton count={4} className="pt-6" />
                   }
                 >
-                  <CommunityListContent
-                    service={selectedService}
-                    initialPage={selectedInitialPage}
-                  />
+                  <CommunityListContent service={selectedService} />
                 </Suspense>
               </CommunityListErrorBoundary>
             )}
