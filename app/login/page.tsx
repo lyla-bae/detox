@@ -79,7 +79,7 @@ function LoginContent() {
             디지털 구독 다이어트{" "}
             <span className="text-brand-primary">디톡스</span>
           </p>
-          <Link href={"/"}>
+          <Link href="/">
             <Image src="/images/logo.png" alt="logo" width={200} height={55} />
           </Link>
         </header>
