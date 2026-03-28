@@ -20,7 +20,11 @@ interface CommunityListPageClientProps {
   initialService: CommunityServiceFilter;
 }
 
-function CommunityListContent({ service }: { service: CommunityServiceFilter }) {
+function CommunityListContent({
+  service,
+}: {
+  service: CommunityServiceFilter;
+}) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const queryService = service === "all" ? undefined : service;
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage } =
@@ -134,9 +138,7 @@ export default function CommunityListPageClient({
       return;
     }
 
-    startTransition(() => {
-      setSelectedService(nextService);
-    });
+    setSelectedService(nextService);
     syncServiceToUrl(nextService);
   };
 
