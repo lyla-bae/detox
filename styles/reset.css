@@ -108,6 +108,14 @@
   }
   body {
     line-height: 1;
+
+    overflow-y: scroll;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  body::-webkit-scrollbar {
+    display: none;
   }
   ol,
   ul {
