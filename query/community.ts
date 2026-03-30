@@ -458,8 +458,8 @@ export function useReportCommunityPostMutation() {
 
   return useMutation({
     mutationFn: reportCommunityPost,
-    onSuccess: async () => {
-      await invalidateCommunityCollections(queryClient);
+    onSuccess: async (_, variables) => {
+      await invalidateCommunityPost(queryClient, variables.postId);
     },
   });
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Header from "@/app/components/header";
 import {
   useCommunityCommentsQuery,
@@ -16,6 +17,7 @@ import type {
   CommunityListItemData,
 } from "../../_types";
 import CommunityDetailCommentSection from "./community-detail-comment-section";
+import CommunityDetailLoadingScreen from "./community-detail-loading-screen";
 import CommunityDetailPostActions from "./community-detail-post-actions";
 import CommunityDetailRecommendedPostsSkeleton from "./community-detail-recommended-posts-skeleton";
 
@@ -32,6 +34,7 @@ export default function CommunityDetailPageClient({
   initialRecommendedPosts,
   initialComments,
 }: CommunityDetailPageClientProps) {
+  const router = useRouter();
   const commentInputRef = useRef<HTMLInputElement | null>(null);
   const detailQuery = useCommunityDetailQuery(postId, initialPost);
   const commentsQuery = useCommunityCommentsQuery(postId, initialComments);
@@ -41,9 +44,19 @@ export default function CommunityDetailPageClient({
     initialRecommendedPosts
   );
 
-  const post = detailQuery.data ?? initialPost;
+  const post = detailQuery.data === undefined ? initialPost : detailQuery.data;
   const comments = commentsQuery.data ?? [];
   const recommendedPosts = recommendedPostsQuery.data ?? [];
+
+  useEffect(() => {
+    if (detailQuery.data === null) {
+      router.replace("/community");
+    }
+  }, [detailQuery.data, router]);
+
+  if (post === null) {
+    return <CommunityDetailLoadingScreen />;
+  }
 
   return (
     <>
