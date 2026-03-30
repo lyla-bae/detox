@@ -23,6 +23,8 @@ export default function DetailKebab({
 }: DetailKebabProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { success, warning, error: errorToast } = useToast();
+  const getErrorMessage = (error: unknown, fallbackMessage: string) =>
+    error instanceof Error && error.message ? error.message : fallbackMessage;
 
   const deleteAlert: AlertItem = {
     id: `delete-${entityName}-alert`,
@@ -39,7 +41,7 @@ export default function DetailKebab({
         success(`${entityName}이 삭제되었습니다.`);
       } catch (error) {
         console.error(error);
-        errorToast(`${entityName} 삭제에 실패했어요.`);
+        errorToast(getErrorMessage(error, `${entityName} 삭제에 실패했어요.`));
       }
     },
   };
@@ -51,7 +53,7 @@ export default function DetailKebab({
       warning(`${entityName}이 신고되었습니다.`);
     } catch (error) {
       console.error(error);
-      errorToast(`${entityName} 신고에 실패했어요.`);
+      errorToast(getErrorMessage(error, `${entityName} 신고에 실패했어요.`));
     }
   };
 
