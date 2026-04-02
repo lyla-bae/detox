@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import TopFloatingButton from "@/app/components/floating-button/top-floating-button";
 import FeedbackState from "@/app/components/feedback-state";
@@ -150,7 +150,7 @@ export default function CommunityListPageClient({
         <h1 id="community-page-title" className="sr-only">
           커뮤니티
         </h1>
-        <BrandTabs value={initialService} onChange={handleChangeService} />
+        <BrandTabs value={selectedService} onChange={handleChangeService} />
 
         <section className="px-6">
           <QueryErrorResetBoundary>
