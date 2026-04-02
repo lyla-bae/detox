@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 import Button from "../components/button";
@@ -74,11 +75,13 @@ function LoginContent() {
         className="relative w-full min-h-screen flex flex-col items-center justify-center gap-20"
       >
         <header className="flex flex-col items-center gap-4">
-          <p className="body-md font-bold text-gray-400">
+          <p tabIndex={0} className="body-md font-bold text-gray-400">
             디지털 구독 다이어트{" "}
             <span className="text-brand-primary">디톡스</span>
           </p>
-          <Image src="/images/logo.png" alt="logo" width={200} height={55} />
+          <Link href="/" aria-label="홈으로 이동">
+            <Image src="/images/logo.png" alt="" width={200} height={55} />
+          </Link>
         </header>
 
         <div className="w-full px-6 flex flex-col gap-4">
