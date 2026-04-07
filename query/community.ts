@@ -269,6 +269,10 @@ export function useDeleteCommunityPostMutation() {
         }),
       ]);
       queryClient.removeQueries({
+        queryKey: communityKeys.detail(variables.postId),
+        exact: true,
+      });
+      queryClient.removeQueries({
         queryKey: communityKeys.likeStatuses(variables.postId),
       });
       queryClient.removeQueries({
