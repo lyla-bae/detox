@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/app/components/header";
 import {
   useCommunityCommentsQuery,
@@ -20,6 +20,7 @@ import CommunityDetailCommentSection from "./community-detail-comment-section";
 import CommunityDetailLoadingScreen from "./community-detail-loading-screen";
 import CommunityDetailPostActions from "./community-detail-post-actions";
 import CommunityDetailRecommendedPostsSkeleton from "./community-detail-recommended-posts-skeleton";
+import { getCommunityReturnTo } from "../../_utils/navigation";
 
 type CommunityDetailPageClientProps = {
   postId: string;
@@ -35,7 +36,9 @@ export default function CommunityDetailPageClient({
   initialComments,
 }: CommunityDetailPageClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const commentInputRef = useRef<HTMLInputElement | null>(null);
+  const returnTo = getCommunityReturnTo(searchParams.get("returnTo"));
   const detailQuery = useCommunityDetailQuery(postId, initialPost);
   const commentsQuery = useCommunityCommentsQuery(postId, initialComments);
   const recommendedPostsQuery = useRecommendedCommunityPostsQuery(
@@ -60,7 +63,11 @@ export default function CommunityDetailPageClient({
 
   return (
     <>
-      <Header variant="back" fallbackPath="/community" />
+      <Header
+        variant="back"
+        onBack={() => router.replace(returnTo)}
+        fallbackPath={returnTo}
+      />
       <main>
         <section className="px-6 py-4">
           <div className="flex items-center justify-between gap-4">
@@ -72,6 +79,7 @@ export default function CommunityDetailPageClient({
             <CommunityDetailPostActions
               postId={postId}
               postUserId={post.userId}
+              returnTo={returnTo}
             />
           </div>
 
@@ -113,7 +121,7 @@ export default function CommunityDetailPageClient({
               관련 게시글
             </h3>
 
-            <CommunityList items={recommendedPosts} />
+            <CommunityList items={recommendedPosts} returnTo={returnTo} />
           </section>
         ) : null}
       </main>

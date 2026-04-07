@@ -4,15 +4,17 @@ import Link from "next/link";
 import type { CommunityListItemData } from "../_types";
 import CommunityReactionStats from "./community-reaction-stats";
 import AuthorMeta from "./author-meta";
+import { buildCommunityDetailPath } from "../_utils/navigation";
 
 type CommunityItemProps = {
   item: CommunityListItemData;
+  returnTo?: string;
 };
 
-export default function CommunityItem({ item }: CommunityItemProps) {
+export default function CommunityItem({ item, returnTo }: CommunityItemProps) {
   return (
     <li className="w-full grid grid-cols-1 items-center gap-2 rounded-lg bg-white px-6 py-4">
-      <Link href={`/community/${item.id}`} className="block">
+      <Link href={buildCommunityDetailPath(item.id, returnTo)} className="block">
         <AuthorMeta
           thumbUrl={item.thumbUrl}
           author={item.author}
