@@ -10,7 +10,6 @@ import {
 } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 import type {
-  CommunityCommentItemData,
   CommunityDetailData,
   CommunityListCursor,
   CommunityListItemData,
@@ -19,7 +18,10 @@ import type {
 import type { SubscriptableBrandType } from "@/app/utils/brand/type";
 import {
   communityKeys,
+  createCommunityCommentsQueryOptions,
+  createCommunityDetailQueryOptions,
   createCommunityListInfiniteQueryOptions,
+  createRecommendedCommunityPostsQueryOptions,
 } from "@/query/community-options";
 import {
   createCommunityComment,
@@ -198,32 +200,29 @@ export function useSuspenseInfiniteCommunityListQuery(
 
 //상세
 export function useCommunityDetailQuery(
-  postId: string,
-  initialPost?: CommunityDetailData
+  postId: string
 ) {
   return useQuery({
-    queryKey: communityKeys.detail(postId),
-    queryFn: () => getCommunityDetail(postId),
+    ...createCommunityDetailQueryOptions({
+      postId,
+      fetchDetail: getCommunityDetail,
+    }),
     enabled: Boolean(postId),
-    initialData: initialPost,
   });
 }
 
 //추천게시글조회
 export function useRecommendedCommunityPostsQuery(
   postId: string,
-  service?: SubscriptableBrandType,
-  initialRecommendedPosts?: CommunityListItemData[]
+  service?: SubscriptableBrandType
 ) {
   return useQuery({
-    queryKey: communityKeys.recommendedPosts(postId, service),
-    queryFn: () =>
-      getRecommendedCommunityPosts({
-        postId,
-        service: service!,
-      }),
+    ...createRecommendedCommunityPostsQueryOptions({
+      postId,
+      service: service!,
+      fetchRecommendedPosts: getRecommendedCommunityPosts,
+    }),
     enabled: Boolean(postId && service),
-    initialData: initialRecommendedPosts,
   });
 }
 
@@ -269,6 +268,10 @@ export function useDeleteCommunityPostMutation() {
         }),
       ]);
       queryClient.removeQueries({
+        queryKey: communityKeys.detail(variables.postId),
+        exact: true,
+      });
+      queryClient.removeQueries({
         queryKey: communityKeys.likeStatuses(variables.postId),
       });
       queryClient.removeQueries({
@@ -284,14 +287,14 @@ export function useDeleteCommunityPostMutation() {
 
 //댓글조회
 export function useCommunityCommentsQuery(
-  postId: string,
-  initialComments?: CommunityCommentItemData[]
+  postId: string
 ) {
   return useQuery({
-    queryKey: communityKeys.commentList(postId),
-    queryFn: () => getCommunityComments(postId),
+    ...createCommunityCommentsQueryOptions({
+      postId,
+      fetchComments: getCommunityComments,
+    }),
     enabled: Boolean(postId),
-    initialData: initialComments,
   });
 }
 
@@ -471,10 +474,6 @@ export function useReportCommunityCommentMutation() {
   return useMutation({
     mutationFn: reportCommunityComment,
     onSuccess: async (_, variables) => {
-      if (!variables.postId) {
-        return;
-      }
-
       await invalidateCommunityPostComments(queryClient, variables.postId);
     },
   });

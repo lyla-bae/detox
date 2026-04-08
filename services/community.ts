@@ -57,6 +57,7 @@ async function ensurePostCanBeReported(postId: string, reporterUserId: string) {
     .select("id, user_id")
     .eq("id", postId)
     .is("deleted_at", null)
+    .is("hidden_at", null)
     .maybeSingle();
 
   if (error) {
@@ -81,6 +82,7 @@ async function ensureCommentCanBeReported(
     .select("id, user_id")
     .eq("id", commentId)
     .is("deleted_at", null)
+    .is("hidden_at", null)
     .maybeSingle();
 
   if (error) {
@@ -495,7 +497,7 @@ export async function deleteCommunityComment(params: {
 //댓글신고
 export async function reportCommunityComment(params: {
   commentId: string;
-  postId?: string;
+  postId: string;
   reporterUserId: string;
 }) {
   await ensureCommentCanBeReported(params.commentId, params.reporterUserId);

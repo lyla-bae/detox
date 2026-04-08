@@ -15,6 +15,7 @@ import CommunityPostListSkeleton from "./community-post-list-skeleton";
 import type { CommunityServiceFilter } from "../_types";
 import { useSuspenseInfiniteCommunityListQuery } from "@/query/community";
 import { useCurrentUserQuery } from "@/query/users";
+import { getCommunityListPath } from "../_utils/navigation";
 
 interface CommunityListPageClientProps {
   initialService: CommunityServiceFilter;
@@ -22,8 +23,10 @@ interface CommunityListPageClientProps {
 
 function CommunityListContent({
   service,
+  returnTo,
 }: {
   service: CommunityServiceFilter;
+  returnTo: string;
 }) {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const queryService = service === "all" ? undefined : service;
@@ -79,14 +82,14 @@ function CommunityListContent({
 
   return (
     <>
-      <CommunityList items={items} />
+      <CommunityList items={items} returnTo={returnTo} />
       {isFetchingNextPage && renderFetchMoreLoading()}
       <div ref={loadMoreRef} className="h-10" />
     </>
   );
 }
 
-function CommunityFloatingActions() {
+function CommunityFloatingActions({ returnTo }: { returnTo: string }) {
   const showTopFloatingButton = useTopFloatingButtonVisible();
   const {
     data: currentUser,
@@ -113,7 +116,9 @@ function CommunityFloatingActions() {
         >
           <TopFloatingButton />
         </div>
-        {showCreateFloatingButton ? <CommunityCreateFloatingButton /> : null}
+        {showCreateFloatingButton ? (
+          <CommunityCreateFloatingButton returnTo={returnTo} />
+        ) : null}
       </div>
     </div>
   );
@@ -125,10 +130,10 @@ export default function CommunityListPageClient({
   const [selectedService, setSelectedService] =
     useState<CommunityServiceFilter>(initialService);
   const resetKey = selectedService;
+  const currentListPath = getCommunityListPath(selectedService);
 
   const syncServiceToUrl = (service: CommunityServiceFilter) => {
-    const nextUrl =
-      service === "all" ? "/community" : `/community?service=${service}`;
+    const nextUrl = getCommunityListPath(service);
 
     window.history.replaceState(null, "", nextUrl);
   };
@@ -161,14 +166,17 @@ export default function CommunityListPageClient({
                     <CommunityPostListSkeleton count={4} className="pt-6" />
                   }
                 >
-                  <CommunityListContent service={selectedService} />
+                  <CommunityListContent
+                    service={selectedService}
+                    returnTo={currentListPath}
+                  />
                 </Suspense>
               </CommunityListErrorBoundary>
             )}
           </QueryErrorResetBoundary>
         </section>
 
-        <CommunityFloatingActions />
+        <CommunityFloatingActions returnTo={currentListPath} />
       </main>
 
       <BottomNav />

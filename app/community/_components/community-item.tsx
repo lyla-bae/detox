@@ -5,9 +5,11 @@ import Link from "next/link";
 import type { CommunityListItemData } from "../_types";
 import CommunityReactionStats from "./community-reaction-stats";
 import AuthorMeta from "./author-meta";
+import { buildCommunityDetailPath } from "../_utils/navigation";
 
 type CommunityItemProps = {
   item: CommunityListItemData;
+  returnTo?: string;
 };
 
 const CONTENT_PREVIEW_MAX_LENGTH = 80;
@@ -22,7 +24,10 @@ function getContentPreview(content: string) {
   return `${normalizedContent.slice(0, CONTENT_PREVIEW_MAX_LENGTH).trimEnd()}...`;
 }
 
-export default function CommunityItem({ item }: CommunityItemProps) {
+export default function CommunityItem({
+  item,
+  returnTo,
+}: CommunityItemProps) {
   const titleId = useId();
   const metaId = useId();
   const previewId = useId();
@@ -31,9 +36,9 @@ export default function CommunityItem({ item }: CommunityItemProps) {
 
   return (
     <li className="w-full rounded-lg bg-white px-6 py-4">
-      <article className=" grid grid-cols-1 items-center gap-2 ">
+      <article className="grid grid-cols-1 items-center gap-2">
         <Link
-          href={`/community/${item.id}`}
+          href={buildCommunityDetailPath(item.id, returnTo)}
           className="block"
           aria-labelledby={titleId}
           aria-describedby={`${previewId} ${metaId} ${statsId}`}
@@ -66,6 +71,7 @@ export default function CommunityItem({ item }: CommunityItemProps) {
             {`좋아요 ${item.likeCount}개, 댓글 ${item.commentCount}개`}
           </p>
         </Link>
+
         <div aria-hidden="true">
           <CommunityReactionStats
             likeCount={item.likeCount}
