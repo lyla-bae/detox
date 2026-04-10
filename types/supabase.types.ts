@@ -284,6 +284,7 @@ export type Database = {
           content: string;
           created_at: string;
           deleted_at: string | null;
+          embedding: string | number[] | null;
           hidden_at: string | null;
           id: string;
           service: string;
@@ -295,6 +296,7 @@ export type Database = {
           content: string;
           created_at?: string;
           deleted_at?: string | null;
+          embedding?: string | number[] | null;
           hidden_at?: string | null;
           id?: string;
           service: string;
@@ -306,6 +308,7 @@ export type Database = {
           content?: string;
           created_at?: string;
           deleted_at?: string | null;
+          embedding?: string | number[] | null;
           hidden_at?: string | null;
           id?: string;
           service?: string;
@@ -319,6 +322,38 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      post_recommendation: {
+        Row: {
+          algorithm_version: string;
+          related_post_ids: string[];
+          source_post_id: string;
+          source_post_updated_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          algorithm_version?: string;
+          related_post_ids?: string[];
+          source_post_id: string;
+          source_post_updated_at: string;
+          updated_at?: string;
+        };
+        Update: {
+          algorithm_version?: string;
+          related_post_ids?: string[];
+          source_post_id?: string;
+          source_post_updated_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "post_recommendation_source_post_id_fkey";
+            columns: ["source_post_id"];
+            isOneToOne: true;
+            referencedRelation: "post";
             referencedColumns: ["id"];
           },
         ];
@@ -487,6 +522,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      match_posts_for_recommendation: {
+        Args: {
+          match_count?: number;
+          match_source_id: string;
+          query_embedding: string;
+        };
+        Returns: {
+          id: string;
+        }[];
+      };
       toggle_post_like: {
         Args: { p_post_id: string; p_user_id: string };
         Returns: boolean;

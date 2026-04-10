@@ -42,6 +42,9 @@ export default async function CommunityDetailPage({
       createRecommendedCommunityPostsQueryOptions({
         postId: id,
         service: post.service,
+        sourceTitle: post.title,
+        sourceContent: post.content,
+        sourcePostUpdatedAt: post.updatedAt,
         fetchRecommendedPosts: getServerRecommendedCommunityPosts,
       })
     ),
