@@ -10,7 +10,6 @@ import {
 } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
 import type {
-  CommunityCommentItemData,
   CommunityDetailData,
   CommunityListCursor,
   CommunityListItemData,
@@ -18,8 +17,12 @@ import type {
 } from "@/app/community/_types";
 import type { SubscriptableBrandType } from "@/app/utils/brand/type";
 import {
+  COMMUNITY_STALE_TIME,
   communityKeys,
+  createCommunityCommentsQueryOptions,
+  createCommunityDetailQueryOptions,
   createCommunityListInfiniteQueryOptions,
+  createRecommendedCommunityPostsQueryOptions,
 } from "@/query/community-options";
 import {
   createCommunityComment,
@@ -198,32 +201,48 @@ export function useSuspenseInfiniteCommunityListQuery(
 
 //상세
 export function useCommunityDetailQuery(
-  postId: string,
-  initialPost?: CommunityDetailData
+  postId: string
 ) {
   return useQuery({
-    queryKey: communityKeys.detail(postId),
-    queryFn: () => getCommunityDetail(postId),
+    ...createCommunityDetailQueryOptions({
+      postId,
+      fetchDetail: getCommunityDetail,
+    }),
     enabled: Boolean(postId),
-    initialData: initialPost,
   });
 }
 
 //추천게시글조회
 export function useRecommendedCommunityPostsQuery(
   postId: string,
-  service?: SubscriptableBrandType,
-  initialRecommendedPosts?: CommunityListItemData[]
+  post: Pick<
+    CommunityDetailData,
+    "service" | "title" | "content" | "updatedAt"
+  > | null
 ) {
+  const ready = Boolean(postId && post?.service && post?.updatedAt);
+
   return useQuery({
-    queryKey: communityKeys.recommendedPosts(postId, service),
-    queryFn: () =>
-      getRecommendedCommunityPosts({
-        postId,
-        service: service!,
-      }),
-    enabled: Boolean(postId && service),
-    initialData: initialRecommendedPosts,
+    ...(ready && post
+      ? createRecommendedCommunityPostsQueryOptions({
+          postId,
+          service: post.service,
+          sourceTitle: post.title,
+          sourceContent: post.content,
+          sourcePostUpdatedAt: post.updatedAt,
+          fetchRecommendedPosts: (p) =>
+            getRecommendedCommunityPosts({
+              postId: p.postId,
+              service: p.service,
+              limit: p.limit,
+            }),
+        })
+      : {
+          queryKey: [...communityKeys.recommendationList(postId), "pending"],
+          queryFn: () => Promise.resolve([] as CommunityListItemData[]),
+          staleTime: COMMUNITY_STALE_TIME,
+        }),
+    enabled: ready,
   });
 }
 
@@ -269,6 +288,10 @@ export function useDeleteCommunityPostMutation() {
         }),
       ]);
       queryClient.removeQueries({
+        queryKey: communityKeys.detail(variables.postId),
+        exact: true,
+      });
+      queryClient.removeQueries({
         queryKey: communityKeys.likeStatuses(variables.postId),
       });
       queryClient.removeQueries({
@@ -284,14 +307,14 @@ export function useDeleteCommunityPostMutation() {
 
 //댓글조회
 export function useCommunityCommentsQuery(
-  postId: string,
-  initialComments?: CommunityCommentItemData[]
+  postId: string
 ) {
   return useQuery({
-    queryKey: communityKeys.commentList(postId),
-    queryFn: () => getCommunityComments(postId),
+    ...createCommunityCommentsQueryOptions({
+      postId,
+      fetchComments: getCommunityComments,
+    }),
     enabled: Boolean(postId),
-    initialData: initialComments,
   });
 }
 
@@ -454,14 +477,24 @@ export function useDeleteCommunityCommentMutation() {
 
 //게시글신고
 export function useReportCommunityPostMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: reportCommunityPost,
+    onSuccess: async (_, variables) => {
+      await invalidateCommunityPost(queryClient, variables.postId);
+    },
   });
 }
 
 //댓글신고
 export function useReportCommunityCommentMutation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: reportCommunityComment,
+    onSuccess: async (_, variables) => {
+      await invalidateCommunityPostComments(queryClient, variables.postId);
+    },
   });
 }

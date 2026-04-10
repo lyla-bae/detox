@@ -8,11 +8,12 @@ import QuickQuestions from "./_components/quick-questions";
 import { useAiChat } from "@/hooks/useAiChat";
 import { useCurrentUserQuery } from "@/query/users";
 
-export default function AIChat() {
+export default function StatisticsAIPage() {
   const { data: user } = useCurrentUserQuery();
   const {
     aiStatus,
     messages,
+    streamedResult,
     showQuickQuestions,
     scrollRef,
     handleQuestionSelect,
@@ -37,7 +38,9 @@ export default function AIChat() {
         className="flex-1 overflow-y-auto pt-4 pb-10 custom-scrollbar"
       >
         <DateDivider />
+
         <AIBubble
+          showAvatar
           status="text"
           content={`안녕하세요\n저는 ${username}님의\n소비분석을 도와드리는 AI디톡이에요.\n아래 질문 중 하나를 선택해주시면\n제가 알잘딱깔센하게 분석해드릴게요.`}
         />
@@ -56,7 +59,9 @@ export default function AIChat() {
           )
         )}
 
-        {aiStatus === "analyzing" && <AIBubble status="analyzing" />}
+        {aiStatus === "analyzing" && (
+          <AIBubble status="analyzing" content={streamedResult} />
+        )}
 
         {showQuickQuestions && aiStatus !== "analyzing" && (
           <QuickQuestions onSelect={handleQuestionSelect} />

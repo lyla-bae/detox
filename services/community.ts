@@ -18,6 +18,96 @@ type PostWithCounts = Tables<"post"> & {
 };
 
 const USER_PREVIEW_SELECT = "id, nickname, profile_image";
+const REPORT_DEFAULT_REASON = "other";
+const DUPLICATE_KEY_ERROR_CODE = "23505";
+
+type SupabaseErrorLike = {
+  code?: string | null;
+  message?: string | null;
+  details?: string | null;
+  hint?: string | null;
+};
+
+const getSafeString = (value: unknown) =>
+  typeof value === "string" ? value : "";
+
+function isDuplicateReportError(error: unknown) {
+  if (typeof error !== "object" || error === null) {
+    return false;
+  }
+
+  const typedError = error as SupabaseErrorLike;
+  const errorMessage = [
+    getSafeString(typedError.message),
+    getSafeString(typedError.details),
+    getSafeString(typedError.hint),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    typedError.code === DUPLICATE_KEY_ERROR_CODE ||
+    errorMessage.includes("duplicate key")
+  );
+}
+
+async function ensurePostCanBeReported(postId: string, reporterUserId: string) {
+  const { data, error } = await supabase
+    .from("post")
+    .select("id, user_id")
+    .eq("id", postId)
+    .is("deleted_at", null)
+    .is("hidden_at", null)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error("이미 삭제되었거나 없는 게시글입니다.");
+  }
+
+  if (data.user_id === reporterUserId) {
+    throw new Error("본인 게시글은 신고할 수 없어요.");
+  }
+}
+
+async function ensureCommentCanBeReported(
+  commentId: string,
+  reporterUserId: string
+) {
+  const { data, error } = await supabase
+    .from("comment")
+    .select("id, user_id")
+    .eq("id", commentId)
+    .is("deleted_at", null)
+    .is("hidden_at", null)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error("이미 삭제되었거나 없는 댓글입니다.");
+  }
+
+  if (data.user_id === reporterUserId) {
+    throw new Error("본인 댓글은 신고할 수 없어요.");
+  }
+}
+
+/** 임베딩 재계산 (작성/수정 후 서버 API, 실패해도 무시) */
+function requestPostEmbeddingRefresh(postId: string) {
+  if (typeof window === "undefined") return;
+  void fetch("/api/community/embeddings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ postId }),
+  }).catch(() => {});
+}
 
 //게시글리스트
 export async function getCommunityListPage(params: {
@@ -37,6 +127,8 @@ export async function getCommunityListPage(params: {
   `
     )
     .is("deleted_at", null)
+    .is("hidden_at", null)
+    .is("active_comments.hidden_at", null)
     .is("active_comments.deleted_at", null);
 
   if (params.service) {
@@ -121,6 +213,7 @@ export async function getCommunityDetail(
     .select("*")
     .eq("id", postId)
     .is("deleted_at", null)
+    .is("hidden_at", null)
     .maybeSingle();
 
   if (postError) {
@@ -146,6 +239,7 @@ export async function getCommunityDetail(
       .from("comment")
       .select("id", { count: "exact", head: true })
       .eq("post_id", post.id)
+      .is("hidden_at", null)
       .is("deleted_at", null),
     supabase
       .from("likes")
@@ -169,47 +263,53 @@ export async function getCommunityDetail(
     commentCount: commentCount ?? 0,
     thumbUrl: user?.profile_image ?? "/images/default-user.png",
     createdAt: post.created_at,
+    updatedAt: post.updated_at,
   };
 }
 
-//추천게시글리스트
+/** 글 수정·삭제 시 추천 캐시 무효화 (테이블 미적용·RLS 시 조용히 실패 가능) */
+async function invalidatePostRecommendationRows(postId: string) {
+  const { error: e1 } = await supabase
+    .from("post_recommendation")
+    .delete()
+    .eq("source_post_id", postId);
+  if (e1) {
+    console.warn("[post_recommendation] delete source:", e1.message);
+  }
+
+  const { error: e2 } = await supabase
+    .from("post_recommendation")
+    .delete()
+    .contains("related_post_ids", [postId]);
+  if (e2) {
+    console.warn("[post_recommendation] delete related ref:", e2.message);
+  }
+}
+
+//추천게시글리스트 (상세와 동일: 서버 API에서 AI 랭킹·폴백 처리)
 export async function getRecommendedCommunityPosts(params: {
   postId: string;
   service: SubscriptableBrandType;
   limit?: number;
 }): Promise<CommunityListItemData[]> {
   const limit = params.limit ?? 3;
-  const sameServicePage = await getCommunityListPage({
-    service: params.service,
-    pageSize: Math.max(limit + 1, 4),
+  const qs = new URLSearchParams({
+    postId: params.postId,
+    limit: String(limit),
   });
 
-  const recommendedPosts = sameServicePage.items.filter(
-    (item) => item.id !== params.postId
-  );
+  const res = await fetch(`/api/community/recommendations?${qs.toString()}`, {
+    credentials: "include",
+  });
 
-  if (recommendedPosts.length >= limit) {
-    return recommendedPosts.slice(0, limit);
+  if (!res.ok) {
+    const errBody = (await res.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new Error(errBody?.error ?? "추천 글을 불러오지 못했어요.");
   }
 
-  const fallbackPage = await getCommunityListPage({
-    pageSize: Math.max(limit * 3, 10),
-  });
-
-  const existingIds = new Set(recommendedPosts.map((item) => item.id));
-  const mergedPosts = [
-    ...recommendedPosts,
-    ...fallbackPage.items.filter((item) => {
-      if (item.id === params.postId || existingIds.has(item.id)) {
-        return false;
-      }
-
-      existingIds.add(item.id);
-      return true;
-    }),
-  ];
-
-  return mergedPosts.slice(0, limit);
+  return res.json() as Promise<CommunityListItemData[]>;
 }
 
 //게시글작성
@@ -233,6 +333,8 @@ export async function createCommunityPost(params: {
   if (error) throw error;
   if (!data) throw new Error("게시글 작성에 실패했어요.");
 
+  requestPostEmbeddingRefresh(data.id);
+
   return data;
 }
 //게시글수정
@@ -249,6 +351,7 @@ export async function updateCommunityPost(params: {
       service: params.service,
       title: params.title,
       content: params.content,
+      embedding: null,
     })
     .eq("id", params.postId)
     .eq("user_id", params.userId)
@@ -260,6 +363,10 @@ export async function updateCommunityPost(params: {
   if (!data) {
     throw new Error("수정할 게시글이 없거나 권한이 없습니다.");
   }
+
+  await invalidatePostRecommendationRows(params.postId);
+
+  requestPostEmbeddingRefresh(params.postId);
 
   return data;
 }
@@ -285,6 +392,8 @@ export async function deleteCommunityPost(params: {
     throw new Error("삭제할 게시글이 없거나 권한이 없습니다.");
   }
 
+  await invalidatePostRecommendationRows(params.postId);
+
   return data;
 }
 
@@ -293,16 +402,26 @@ export async function reportCommunityPost(params: {
   postId: string;
   reporterUserId: string;
 }) {
+  await ensurePostCanBeReported(params.postId, params.reporterUserId);
+
   const { data, error } = await supabase
     .from("report")
     .insert({
+      detail: null,
       post_id: params.postId,
+      reason: REPORT_DEFAULT_REASON,
       reporter_user_id: params.reporterUserId,
     })
     .select("id")
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    if (isDuplicateReportError(error)) {
+      throw new Error("이미 신고한 게시글입니다.");
+    }
+
+    throw error;
+  }
   if (!data) {
     throw new Error("게시글 신고에 실패했어요.");
   }
@@ -319,6 +438,7 @@ export async function getCommunityComments(
     .select("*")
     .eq("post_id", postId)
     .is("deleted_at", null)
+    .is("hidden_at", null)
     .order("created_at", { ascending: true });
 
   if (commentsError) {
@@ -403,18 +523,29 @@ export async function deleteCommunityComment(params: {
 //댓글신고
 export async function reportCommunityComment(params: {
   commentId: string;
+  postId: string;
   reporterUserId: string;
 }) {
+  await ensureCommentCanBeReported(params.commentId, params.reporterUserId);
+
   const { data, error } = await supabase
     .from("report")
     .insert({
       comment_id: params.commentId,
+      detail: null,
+      reason: REPORT_DEFAULT_REASON,
       reporter_user_id: params.reporterUserId,
     })
     .select("id")
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {
+    if (isDuplicateReportError(error)) {
+      throw new Error("이미 신고한 댓글입니다.");
+    }
+
+    throw error;
+  }
   if (!data) {
     throw new Error("댓글 신고에 실패했어요.");
   }

@@ -1,58 +1,80 @@
-import { OpenAI } from "openai";
-import { tavily } from "@tavily/core";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { getSystemPrompt } from "@/app/utils/subscriptions/constants";
 import { validateAnalysisResponse } from "@/app/utils/subscriptions/validation";
-import { subscriptableBrand } from "@/app/utils/brand/brand";
+import { extractJsonChunk } from "@/app/utils/ai/stream-parser";
+import {
+  getCachedAnalysis,
+  upsertAnalysisCache,
+  makeCacheKey,
+} from "@/app/api/analyze/cache-utils";
+import { streamSubscriptionAnalysis } from "@/app/api/analyze/analysis-pipeline";
+import { calculateCategoryRatio } from "@/app/utils/ai/analysis";
+import { QUICK_ANALYSIS_QUESTIONS } from "@/app/utils/ai/quick-analysis-questions";
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!OPENAI_API_KEY || !TAVILY_API_KEY || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+/** 프리패치 시 한 요청당 허용하는 최대 질문 수 (비용·지연 상한) */
+const MAX_PREFETCH_QUESTIONS = 20;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error("필수 환경 변수가 설정되지 않았습니다.");
 }
 
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
-const tavilyClient = tavily({ apiKey: TAVILY_API_KEY });
-
-const withTimeout = async <T>(
-  promise: Promise<T>,
-  ms: number,
-  label: string
-): Promise<T> => {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<T>((_, reject) => {
-        timer = setTimeout(
-          () => reject(new Error(`${label} 타임아웃 (${ms}ms)`)),
-          ms
-        );
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
+type AnalyzeBody = {
+  question?: string;
 };
+
+type PrefetchBody = {
+  mode: "prefetch";
+  userId: string;
+  questions?: unknown;
+};
+
+function isPrefetchBody(body: unknown): body is PrefetchBody {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    (body as PrefetchBody).mode === "prefetch" &&
+    typeof (body as PrefetchBody).userId === "string"
+  );
+}
+
+/** questions 미지정 시 빠른 질문 목록, 지정 시 문자열 배열만 허용·상한 적용 */
+function resolvePrefetchQuestionList(
+  questions: unknown
+): { ok: true; list: string[] } | { ok: false; response: Response } {
+  if (questions === undefined) {
+    return { ok: true, list: [...QUICK_ANALYSIS_QUESTIONS] };
+  }
+  if (!Array.isArray(questions)) {
+    return {
+      ok: false,
+      response: Response.json(
+        { error: "questions는 문자열 배열이어야 합니다." },
+        { status: 400 }
+      ),
+    };
+  }
+  if (questions.some((q) => typeof q !== "string")) {
+    return {
+      ok: false,
+      response: Response.json(
+        { error: "questions의 각 항목은 문자열이어야 합니다." },
+        { status: 400 }
+      ),
+    };
+  }
+  const trimmed = (questions as string[])
+    .map((q) => q.trim())
+    .filter(Boolean)
+    .slice(0, MAX_PREFETCH_QUESTIONS);
+  return { ok: true, list: trimmed };
+}
 
 export async function POST(req: Request) {
   try {
-    const { userContext, question } = await req.json();
-
-    if (!userContext?.categoryRatio) {
-      return Response.json(
-        { error: "카테고리 비율 정보 부족" },
-        { status: 400 }
-      );
-    }
-
     const cookieStore = await cookies();
-    const availableBrands = Object.keys(subscriptableBrand).join(", ");
-
     const supabase = createServerClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
       cookies: {
         get(name: string) {
@@ -62,95 +84,163 @@ export async function POST(req: Request) {
     });
 
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-
-    if (!userId) {
-      return Response.json(
-        { error: "Unauthorized - 로그인이 필요합니다." },
-        { status: 401 }
-      );
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const body: unknown = await req.json();
+
+    if (isPrefetchBody(body)) {
+      if (body.userId !== user.id) {
+        return Response.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      const resolved = resolvePrefetchQuestionList(body.questions);
+      if (!resolved.ok) return resolved.response;
+
+      const { data: subs, error: subsError } = await supabase
+        .from("subscription")
+        .select("*")
+        .eq("user_id", body.userId);
+
+      if (subsError) throw subsError;
+
+      if (!subs || subs.length === 0) {
+        return Response.json(
+          { error: "구독 데이터가 없습니다." },
+          { status: 404 }
+        );
+      }
+
+      const categoryRatio = calculateCategoryRatio(subs);
+      const list = resolved.list;
+
+      const results: Array<{
+        question: string;
+        cacheKey: string;
+        status: string;
+      }> = [];
+
+      for (const question of list) {
+        const q = typeof question === "string" ? question.trim() : "";
+        const cacheKey = makeCacheKey(body.userId, q, categoryRatio);
+
+        const existing = await getCachedAnalysis(cacheKey);
+        if (existing) {
+          results.push({ question: q, cacheKey, status: "skip-hit" });
+          continue;
+        }
+
+        try {
+          const accumulated = await streamSubscriptionAnalysis(
+            {
+              subscriptions: subs as Record<string, unknown>[],
+              categoryRatio,
+              questionText: q,
+            },
+            () => {}
+          );
+
+          const { jsonPart } = extractJsonChunk(accumulated);
+          if (jsonPart) {
+            const parsed = JSON.parse(jsonPart);
+            if (validateAnalysisResponse(parsed)) {
+              await upsertAnalysisCache(cacheKey, accumulated);
+              results.push({ question: q, cacheKey, status: "prefetched" });
+            } else {
+              results.push({ question: q, cacheKey, status: "skip-invalid" });
+            }
+          } else {
+            results.push({ question: q, cacheKey, status: "skip-no-json" });
+          }
+        } catch (err) {
+          console.error("[analyze prefetch] question failed:", q, err);
+          results.push({ question: q, cacheKey, status: "error" });
+        }
+      }
+
+      return Response.json({ status: "ok", results });
+    }
+
+    const { question } = body as AnalyzeBody;
+    const questionText = typeof question === "string" ? question.trim() : "";
 
     const { data: subscriptions, error: dbError } = await supabase
       .from("subscription")
-      .select("service, total_amount")
-      .eq("user_id", userId);
+      .select("*")
+      .eq("user_id", user.id);
 
-    if (dbError) throw dbError;
-
-    if (!subscriptions || subscriptions.length === 0) {
-      return Response.json(
-        { error: "분석할 구독 데이터가 없습니다." },
-        { status: 404 }
-      );
+    if (dbError || !subscriptions?.length) {
+      return Response.json({ error: "데이터 부족" }, { status: 400 });
     }
 
-    const currentYear = new Date().getFullYear();
-    const searchQuery = question
-      ? `${currentYear}년 ${question} 할인 혜택 및 최저가로 이용하는 꿀팁`
-      : `${currentYear}년 한국 인기 구독 서비스(OTT, 쇼핑) 결합 할인 및 통신사 제휴 최신 정보`;
+    const categoryRatio = calculateCategoryRatio(subscriptions);
 
-    const searchResult = await withTimeout(
-      tavilyClient.search(searchQuery, {
-        maxResults: 5,
-        searchDepth: "advanced",
-      }),
-      10000,
-      "Tavily Search"
-    ).catch(() => ({ results: [] }));
-
-    const lastUpdated = new Date().toISOString().split("T")[0];
-    const systemPrompt = getSystemPrompt(
-      userContext.categoryRatio,
-      lastUpdated,
-      availableBrands,
-      question
-    );
-
-    const response = await withTimeout(
-      openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: `
-              사용자 질문: "${question || "전반적인 소비 분석"}"
-              보유 구독 리스트: ${JSON.stringify(subscriptions)}
-              최신 시장 할인 정보: ${JSON.stringify(searchResult.results)}
-              
-              위 데이터를 분석하여 아래 규칙을 지켜 답변하세요:
-              1. 사용자가 질문한 내용에 대해 즉시 실행 가능한 '최저가 대안'을 제시하세요.
-              2. "방안을 찾아보세요"라고 하지 말고, "A를 B로 바꾸면 월 0,000원이 절약됩니다"라고 확정적으로 말하세요.
-              3. 'analysis_items' 배열에 최소 2개 이상의 구체적인 해결책을 담으세요.
-              4. 각 해결책의 'content'는 가독성을 위해 불렛포인트(•)와 줄바꿈(\\n)을 필수로 사용하세요.
-            `,
-          },
-        ],
-        response_format: { type: "json_object" },
-      }),
-      25000,
-      "OpenAI Generation"
-    );
-
-    const content = response.choices[0].message.content;
-    if (!content) throw new Error("AI 응답 생성 실패");
-
-    const parsed = JSON.parse(content);
-
-    if (!validateAnalysisResponse(parsed)) {
-      console.error("AI 응답 구조 오류:", parsed);
-      throw new Error("AI 응답 형식이 유효하지 않습니다.");
+    const cacheKey = makeCacheKey(user.id, questionText, categoryRatio);
+    const cached = await getCachedAnalysis(cacheKey);
+    if (cached) {
+      return new Response(cached, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-store",
+          "x-cache-status": "hit",
+        },
+      });
     }
 
-    return Response.json(parsed);
+    const encoder = new TextEncoder();
+
+    const readable = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        try {
+          const accumulated = await streamSubscriptionAnalysis(
+            {
+              subscriptions: subscriptions as Record<string, unknown>[],
+              categoryRatio,
+              questionText,
+            },
+            (chunk) => {
+              controller.enqueue(encoder.encode(chunk));
+            }
+          );
+
+          try {
+            const { jsonPart } = extractJsonChunk(accumulated);
+            if (jsonPart) {
+              const parsed = JSON.parse(jsonPart);
+              if (validateAnalysisResponse(parsed)) {
+                await upsertAnalysisCache(cacheKey, accumulated);
+              } else {
+                console.error("Invalid AI JSON shape — cache skip");
+              }
+            } else {
+              console.error("Missing [JSON_DATA] marker in AI output");
+            }
+          } catch (e) {
+            console.error("Final JSON parse/validate error:", e);
+          }
+          controller.close();
+        } catch (e) {
+          console.error("Analysis stream error:", e);
+          controller.error(
+            e instanceof Error ? e : new Error(String(e))
+          );
+        }
+      },
+    });
+
+    return new Response(readable, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+        "x-cache-status": "miss",
+      },
+    });
   } catch (error) {
-    console.error("🔥🔥 [API 에러 추적]:", error);
-    return Response.json(
-      { error: error instanceof Error ? error.message : "분석 중 오류 발생" },
-      { status: 500 }
-    );
+    console.error("Analysis Error:", error);
+    return Response.json({ error: "분석 중 오류 발생" }, { status: 500 });
   }
 }
