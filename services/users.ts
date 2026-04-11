@@ -16,7 +16,7 @@ export type UserProfile = Tables<"users">;
 
 //소셜
 export async function signInWithOAuth(
-  provider: "google" | "kakao",
+  provider: "google" | "kakao" | "custom:naver",
   redirectTo: string
 ) {
   return supabase.auth.signInWithOAuth({

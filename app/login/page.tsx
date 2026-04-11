@@ -37,7 +37,9 @@ function LoginContent() {
     }
   }, [currentUser, nextPath, router]);
 
-  const handleSocialLogin = async (provider: "google" | "kakao") => {
+  const handleSocialLogin = async (
+    provider: "google" | "kakao" | "custom:naver"
+  ) => {
     try {
       const redirectTo = `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(nextPath)}`;
 
@@ -90,11 +92,13 @@ function LoginContent() {
             onClick={() => handleSocialLogin("kakao")}
           />
           <SnsLoginButton
+            type="naver"
+            onClick={() => handleSocialLogin("custom:naver")}
+          />
+          <SnsLoginButton
             type="google"
             onClick={() => handleSocialLogin("google")}
           />
-
-          {/* <SnsLoginButton type="naver" /> */}
         </div>
 
         <Tooltip open>
