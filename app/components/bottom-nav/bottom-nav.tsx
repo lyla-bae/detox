@@ -33,7 +33,7 @@ export default function BottomNav() {
       <div aria-hidden="true" className={BOTTOM_NAV_HEIGHT_CLASS} />
       <nav
         className={cn(
-          "fixed bottom-0 left-1/2 -translate-x-1/2 z-10 flex w-full items-center justify-around rounded-t-lg bg-white border border-gray-50",
+          "fixed bottom-0 left-1/2 -translate-x-1/2 z-999 flex w-full items-center justify-around rounded-t-lg bg-white border border-gray-50",
           "max-w-(--max-width) mx-auto",
           BOTTOM_NAV_HEIGHT_CLASS,
           BOTTOM_NAV_SAFE_AREA_CLASS

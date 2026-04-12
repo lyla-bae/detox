@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import { cn } from "@/lib/utils";
 
 import HomePageSkeleton from "./home-page-skeleton";
 import HomeSummaryCard from "./home-summary-card";
@@ -34,7 +35,12 @@ function HomeMain({
   );
 
   return (
-    <>
+    <div
+      className={cn(
+        !hasSubscription &&
+          "flex min-h-[calc(100dvh-56px-70px)] flex-col overflow-hidden"
+      )}
+    >
       <section className="mb-4 grid grid-cols-[1fr_100px] items-center justify-between bg-white px-6 py-5">
         <HomeSummaryCard
           hasSubscription={hasSubscription}
@@ -48,7 +54,7 @@ function HomeMain({
         thisMonthTotal={thisMonthTotal}
         isLoggedIn={isLoggedIn}
       />
-    </>
+    </div>
   );
 }
 

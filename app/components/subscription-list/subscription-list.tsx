@@ -37,14 +37,8 @@ export default function SubscriptionList({
   groupCount,
   isFreeTrial = false,
 }: Props) {
-  return (
-    <Link
-      href={href ?? ""}
-      className={cn(
-        "w-full grid grid-cols-[1fr_auto_auto] items-center gap-4 py-4 bg-white",
-        href ? "cursor-pointer" : "cursor-default"
-      )}
-    >
+  const content = (
+    <>
       <div className="flex items-start gap-3">
         <BrandBox brandType={brandType} size="sm" />
         <div>
@@ -73,6 +67,26 @@ export default function SubscriptionList({
           className="w-5 h-5 text-gray-300"
         />
       )}
+    </>
+  );
+
+  const className = cn(
+    "w-full grid grid-cols-[1fr_auto_auto] items-center gap-4 py-4 bg-white",
+    href ? "cursor-pointer" : "cursor-default"
+  );
+
+  if (!href) {
+    return <div className={className}>{content}</div>;
+  }
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        className
+      )}
+    >
+      {content}
     </Link>
   );
 }
