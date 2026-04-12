@@ -35,14 +35,14 @@ export default function AnalysisSummary({
 
   return (
     <div className="w-full px-5 py-6 bg-white animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="mb-8">
+      {/* <div className="mb-8">
         <h2 className="title-md text-brand-primary font-bold">
           AI 디톡이<span className="text-gray-900">의 소비분석 요약</span>
         </h2>
         <p className="body-md text-gray-400 mt-1">
           AI가 분석한 정보로 일부는 실제와 다를 수 있어요.
         </p>
-      </div>
+      </div> */}
 
       <div className="flex flex-col gap-12">
         {items.map(({ label, data: analysisData }) => {
@@ -50,21 +50,25 @@ export default function AnalysisSummary({
           return (
             <section
               key={label}
-              className="flex flex-col gap-6 border-b border-gray-100 pb-10 last:border-0 last:pb-0"
+              className="flex flex-col gap-10 border-b border-gray-100 pb-10 last:border-0 last:pb-0"
             >
-              <p className="body-md font-medium text-gray-500 leading-snug">
+              {/* <p className="body-md font-medium text-gray-500 leading-snug">
                 {label}
-              </p>
+              </p> */}
               <div className="flex flex-col gap-1">
-                <h3 className="title-md font-bold text-brand-primary leading-tight">
+                <h2 className="title-md text-brand-primary font-bold">
+                  AI 디톡이
+                  <span className="text-gray-900">의 소비분석 요약</span>
+                </h2>
+                {/* <h3 className="title-md font-bold text-brand-primary leading-tight">
                   {analysisData.title}
-                </h3>
-                <p className="body-md text-gray-700 leading-relaxed whitespace-pre-line">
+                </h3> */}
+                <p className="body-md text-gray-200 leading-relaxed whitespace-pre-line">
                   {analysisData.description}
                 </p>
               </div>
 
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-10">
                 {analysisItems.map((item, index) => {
                   const brandType = toBrandType(item.brand);
                   const displayBrand =
@@ -87,8 +91,8 @@ export default function AnalysisSummary({
                         </div>
                       </div>
 
-                      <div className="w-full bg-gray-50 rounded-2xl py-8 flex flex-col items-center justify-center gap-4 border border-gray-100">
-                        <BrandBox brandType={displayBrand} size="lg" />
+                      <div className="w-full bg-gray-50 rounded-2xl py-6 flex flex-col items-center justify-center gap-4 border border-gray-100">
+                        <BrandBox brandType={displayBrand} size="sm" />
 
                         {(isSubscribe || isCancel) && (
                           <div
