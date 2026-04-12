@@ -18,8 +18,8 @@ export default function ComparisonInsight({
   if (isLoading) {
     return (
       <div className="flex flex-col items-start px-6 py-6 w-full gap-2">
-        <Skeleton className="h-7 w-40 rounded-md bg-brand-primary/20" />
-        <Skeleton className="h-5 w-60 rounded-md bg-brand-primary/20" />
+        <Skeleton className="h-7 w-40 rounded-md" />
+        <Skeleton className="h-5 w-60 rounded-md" />
       </div>
     );
   }

@@ -16,12 +16,12 @@ export default function HomeSummarySkeleton({ type }: Props) {
     <>
       <div className="flex flex-col gap-4">
         <div className="title">
-          <Skeleton className="h-8 w-24 rounded-md bg-gray-100" />
+          <Skeleton className="h-8 w-24 rounded-md" />
           <div className="flex items-center gap-2 mt-1">
-            <Skeleton className="h-8 w-28 rounded-md bg-gray-100" />
-            <Skeleton className="h-8 w-16 rounded-md bg-gray-100" />
+            <Skeleton className="h-8 w-28 rounded-md" />
+            <Skeleton className="h-8 w-16 rounded-md" />
             {isSaved && (
-              <Skeleton className="h-8 w-20 rounded-md bg-gray-100" />
+              <Skeleton className="h-8 w-20 rounded-md" />
             )}
           </div>
         </div>
@@ -35,7 +35,7 @@ export default function HomeSummarySkeleton({ type }: Props) {
         </Link>
       </div>
       <div>
-        <Skeleton className="w-[100px] h-[100px] rounded-2xl bg-gray-100" />
+        <Skeleton className="w-[100px] h-[100px] rounded-2xl" />
       </div>
     </>
   );

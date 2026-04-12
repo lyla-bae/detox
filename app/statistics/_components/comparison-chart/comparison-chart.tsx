@@ -24,23 +24,40 @@ export default function ComparisonChart({
   isLoading = false,
 }: Props) {
   if (isLoading) {
+    const skeletonBars = [
+      {
+        labelClassName: "h-5 w-16",
+        barClassName: "h-28 w-[30px] rounded-t-[4px] rounded-b-none",
+      },
+      {
+        labelClassName: "h-5 w-20",
+        barClassName: "h-36 w-[30px] rounded-t-[4px] rounded-b-none",
+      },
+    ];
+
     return (
-      <div className="flex flex-col gap-4">
-        <div className="mx-6 py-6 bg-gray-50 rounded-lg h-56">
-          <div className="h-full w-full flex flex-col justify-end gap-4 px-6 pb-2">
-            <div className="flex items-end justify-between gap-6">
-              <Skeleton className="h-28 w-12 bg-gray-200/70" />
-              <Skeleton className="h-20 w-12 bg-gray-200/70" />
-              <Skeleton className="h-32 w-12 bg-gray-200/70" />
-              <Skeleton className="h-24 w-12 bg-gray-200/70" />
-            </div>
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-4 w-16 bg-gray-200/70" />
-              <Skeleton className="h-4 w-16 bg-gray-200/70" />
-            </div>
+      <div className="mx-6">
+        <div className="h-56 rounded-lg bg-gray-50 px-6 pt-5">
+          <div className="grid h-full grid-cols-2 gap-6 pb-2">
+            {skeletonBars.map((bar, index) => (
+              <div
+                key={index}
+                className="flex h-full flex-col items-center justify-end gap-3"
+              >
+                <Skeleton variant="chart" className={bar.labelClassName} />
+                <Skeleton variant="chart" className={bar.barClassName} />
+              </div>
+            ))}
           </div>
         </div>
-        <Skeleton className="mx-6 h-14 rounded-xl bg-teal-100/60" />
+
+        <div className="mt-2 grid grid-cols-2 px-6">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div key={index} className="flex justify-center">
+              <Skeleton variant="chart" className="h-4 w-12" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
