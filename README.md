@@ -82,7 +82,7 @@ npm run dev
 
 ## 주요 디렉토리
 
-```
+```text
 app/         # App Router 페이지, 레이아웃, 라우트 핸들러
   (home)/    # 홈
   community/ # 커뮤니티 목록, 상세, 작성, 수정
