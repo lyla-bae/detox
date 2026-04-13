@@ -1,9 +1,10 @@
 import { getLoginRedirectUrl } from "@/app/utils/auth/get-login-redirect-url";
+import { fetchNaverProfile } from "@/app/utils/auth/fetch-naver-profile";
 import { getSafeRedirectPath } from "@/app/utils/auth/get-safe-redirect-path";
 import { upsertUserWithNicknameRetry } from "@/app/utils/auth/upsert-user-with-nickname-retry";
 import { generateNickname } from "@/app/utils/nickname";
 import { createServerClient } from "@supabase/ssr";
-import type { User } from "@supabase/supabase-js";
+import type { Session, User } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -23,15 +24,30 @@ function redirectWithCookies(
   return redirectResponse;
 }
 
-function getSocialName(user: User) {
-  const value = user.user_metadata.name ?? user.user_metadata.full_name;
+type UnknownRecord = Record<string, unknown>;
+type ResolvedOAuthProfile = {
+  provider: string;
+  providerId: string;
+  email: string | null;
+  name: string | null;
+  profileImage: string | null;
+};
 
-  if (typeof value !== "string") {
-    return null;
-  }
+function toRecord(value: unknown): UnknownRecord | null {
+  return value && typeof value === "object" ? (value as UnknownRecord) : null;
+}
 
-  const trimmedValue = value.trim();
-  return trimmedValue === "" ? null : trimmedValue;
+function getString(record: UnknownRecord | null, key: string) {
+  const value = record?.[key];
+  return typeof value === "string" ? value.trim() || null : null;
+}
+
+function getIdentityData(user: User, provider: string) {
+  const identity =
+    user.identities?.find((item) => item.provider === provider) ??
+    user.identities?.[0];
+
+  return toRecord(identity?.identity_data);
 }
 
 function getOAuthProvider(user: User) {
@@ -50,18 +66,46 @@ function getOAuthProvider(user: User) {
   throw new Error("OAuth provider 정보를 찾을 수 없어요.");
 }
 
+async function resolveOAuthProfile(
+  user: User,
+  session: Session | null
+): Promise<ResolvedOAuthProfile> {
+  const provider = getOAuthProvider(user);
+  const metadata = toRecord(user.user_metadata);
+  const identityData = getIdentityData(user, provider);
+  const fetchedProfile =
+    provider === "custom:naver"
+      ? await fetchNaverProfile(session?.provider_token)
+      : null;
+
+  return {
+    provider,
+    providerId:
+      fetchedProfile?.providerId ??
+      getString(identityData, "provider_id") ??
+      getString(identityData, "id") ??
+      getString(identityData, "sub") ??
+      user.id,
+    email:
+      fetchedProfile?.email ?? user.email ?? getString(metadata, "email"),
+    name:
+      fetchedProfile?.name ??
+      getString(metadata, "name") ??
+      getString(metadata, "full_name") ??
+      getString(metadata, "nickname"),
+    profileImage:
+      fetchedProfile?.profileImage ??
+      getString(metadata, "avatar_url") ??
+      getString(metadata, "picture") ??
+      getString(metadata, "profile_image"),
+  };
+}
+
 async function syncOAuthUser(
   supabase: ReturnType<typeof createServerClient>,
-  user: User
+  user: User,
+  profile: ResolvedOAuthProfile
 ) {
-  const provider = getOAuthProvider(user);
-  const providerId =
-    user.identities?.find((identity) => identity.provider === provider)?.id ??
-    user.id;
-
-  const profileImage =
-    user.user_metadata.avatar_url ?? user.user_metadata.picture ?? null;
-
   const { data: existingUser, error: existingUserError } = await supabase
     .from("users")
     .select("nickname, profile_image")
@@ -72,26 +116,25 @@ async function syncOAuthUser(
     throw existingUserError;
   }
 
-  const socialName = getSocialName(user);
   await upsertUserWithNicknameRetry({
     makeNickname: (retryCount) => {
       if (retryCount === 0) {
-        return existingUser?.nickname ?? socialName ?? generateNickname();
+        return existingUser?.nickname ?? profile.name ?? generateNickname();
       }
 
-      return socialName
-        ? `${socialName}${Math.floor(1000 + Math.random() * 9000)}`
+      return profile.name
+        ? `${profile.name}${Math.floor(1000 + Math.random() * 9000)}`
         : generateNickname();
     },
     tryUpsert: (nickname) =>
       supabase.from("users").upsert({
         id: user.id,
-        email: user.email ?? null,
-        provider,
-        provider_id: providerId,
+        email: profile.email,
+        provider: profile.provider,
+        provider_id: profile.providerId,
         is_anonymous: false,
         nickname,
-        profile_image: existingUser?.profile_image ?? profileImage,
+        profile_image: existingUser?.profile_image ?? profile.profileImage,
         deleted_at: null,
       }),
     canRetry: () => !existingUser?.nickname,
@@ -145,7 +188,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await syncOAuthUser(supabase, data.user);
+    const oauthProfile = await resolveOAuthProfile(data.user, data.session);
+    await syncOAuthUser(supabase, data.user, oauthProfile);
   } catch (syncError) {
     console.error(syncError);
     await supabase.auth.signOut();
